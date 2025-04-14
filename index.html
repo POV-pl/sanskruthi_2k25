@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SANSKRUTHI 2K25 | Dr. Ambedkar Institute of Technology</title>
+    <meta name="description" content="Official website for SANSKRUTHI 2K25, the cultural festival of Dr. Ambedkar Institute of Technology, Bengaluru. Get ready for an unforgettable celebration of art, music, dance and culture.">
+    
+    <!-- Preconnect to resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/src/assets/bg-gif.gif" as="image">
+    
+    <!-- Open Graph tags for social sharing -->
+    <meta property="og:title" content="SANSKRUTHI 2K25 | Dr. Ambedkar Institute of Technology">
+    <meta property="og:description" content="Experience SANSKRUTHI 2K25 - The ultimate cultural festival in Bengaluru">
+    <meta property="og:image" content="/og-image.jpg">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sanskruthi2k25.drait.edu.in">
+    
+    <!-- Twitter Card tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SANSKRUTHI 2K25 | Dr. Ambedkar Institute of Technology">
+    <meta name="twitter:description" content="Experience SANSKRUTHI 2K25 - The ultimate cultural festival in Bengaluru">
+    <meta name="twitter:image" content="/og-image.jpg">
+    
+    <!-- Theme color for browser -->
+    <meta name="theme-color" content="#1e0231">
+    
+    <!-- Custom styles -->
+    <style>
+      /* Add loader styles for initial page load */
+      .initial-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease-out;
+      }
+      
+      .loader-content {
+        text-align: center;
+      }
+      
+      .loader-logo {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2rem;
+        color: #fff;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px #c417e0, 0 0 20px #c417e0;
+        animation: pulse 2s infinite;
+      }
+      
+      .loader-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #c417e0;
+        animation: spin 1s ease-in-out infinite;
+        margin: 0 auto;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Initial loader that shows while React loads -->
+    <div class="initial-loader" id="initial-loader">
+      <div class="loader-content">
+        <div class="loader-logo">SANSKRUTHI 2K25</div>
+        <div class="loader-spinner"></div>
+      </div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Script to remove loader after page loads -->
+    <script>
+      window.addEventListener('load', function() {
+        const loader = document.getElementById('initial-loader');
+        setTimeout(function() {
+          loader.style.opacity = '0';
+          setTimeout(function() {
+            loader.style.display = 'none';
+          }, 500);
+        }, 1000);
+      });
+    </script>
+    
+    <!-- Google Analytics or other analytics can be added here -->
+  </body>
+</html>
