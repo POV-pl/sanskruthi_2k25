@@ -16,8 +16,9 @@ const Home = () => {
   return (
     <div className="landing-container">
       <div className="bg-overlay"></div>
+      
       <video autoPlay muted loop className="bg-video">
-        <source src="https://cdnjs.cloudflare.com/ajax/libs/Blotter/0.1.0/assets/videos/ink.mp4" type="video/mp4" />
+        <source src="/Untitled video - Made with Clipchamp.mp4" type="video/mp4" />
       </video>
       
       <div className={`content-wrapper ${isLoaded ? 'loaded' : ''}`}>
