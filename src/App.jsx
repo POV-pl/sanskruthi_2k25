@@ -28,10 +28,10 @@ const Home = () => {
           <p className="text-sm text-white/70">Bengaluru, Karnataka</p>
         </div>
         
-        <div className="flex flex-col items-center justify-center relative my-10">
-          <div className="w-[280px] h-[280px] rounded-full border-2 border-white/80 shadow-[0_0_10px_#c417e0,0_0_20px_#c417e0,inset_0_0_10px_#c417e0] absolute z-[-1] animate-pulse"></div>
-          <h1 className="font-['Orbitron'] text-4xl md:text-[4.5rem] font-black tracking-wider text-white shadow-[0_0_5px_#c417e0,0_0_10px_#c417e0,0_0_20px_#c417e0,0_0_30px_#c417e0] mb-2 rounded-xl px-1">SANSKRUTHI</h1>
-          <div className="font-['Orbitron'] text-2xl md:text-[2.5rem] font-bold text-white shadow-[0_0_5px_#17b2e0,0_0_10px_#17b2e0] rounded-xl px-1">2K25</div>
+        <div className="flex flex-col  items-center justify-center relative my-10">
+          <div className="w-50 h-50 md:w-75 md:h-75 rounded-full border-2 border-white/80 shadow-[0_0_10px_#c417e0,0_0_20px_#c417e0,inset_0_0_10px_#c417e0] absolute z-[-1] animate-pulse"></div>
+          <h1 className="font-['Orbitron'] text-4xl sm:text-5xl md:text-6xl  font-black tracking-wider text-white shadow-[0_0_5px_#c417e0,0_0_10px_#c417e0,0_0_20px_#c417e0,0_0_30px_#c417e0] mb-2 rounded-xl px-1">SANSKRUTHI</h1>
+          <div className="font-['Orbitron'] text-2xl sm:text-3xl md:text-5xl font-bold text-white shadow-[0_0_5px_#17b2e0,0_0_10px_#17b2e0] rounded-xl px-1">2K25</div>
         </div>
         
         <div className="flex flex-col items-center gap-5 mt-10">
