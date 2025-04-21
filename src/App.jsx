@@ -14,10 +14,10 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="h-screen   w-screen relative overflow-hidden flex justify-center items-center">
+    <div className="h-screen   w-screen absolute overflow-hidden flex justify-center items-center">
       <div className="absolute top-0 left-0 w-full h-full bg-[rgba(4,2,79,0.7)] z-[1]"></div>
       
-      <video autoPlay muted loop className="absolute top-0 left-0 w-full h-full object-cover opacity-30 mix-blend-screen z-[2]">
+      <video autoPlay muted loop className="absolute top-0 left-0 w-full h-full object-cover opacity-[40] mix-blend-screen z-[2] op">
         <source src="/Untitled video - Made with Clipchamp.mp4" type="video/mp4" />
       </video>
       
