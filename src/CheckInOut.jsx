@@ -2,11 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase'; // Make sure path is correct
-import jsQR from 'jsqr'; // Import jsQR directly instead of dynamic import
+import jsQR from 'jsqr'; // Import jsQR directly
 
 const CheckInOut = () => {
   const [activeTab, setActiveTab] = useState('check-in');
-  const [scanning, setScanning] = useState(false);
+  const [scanning, setScanning] = useState(true); // Start scanning by default
   const [cameraError, setCameraError] = useState(null);
   const [scannedData, setScannedData] = useState(null);
   const [attendee, setAttendee] = useState(null);
@@ -16,18 +16,30 @@ const CheckInOut = () => {
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const streamRef = useRef(null); // Store stream reference to properly clean up
-  const animationRef = useRef(null); // Store animation frame ID for cleanup
+  const streamRef = useRef(null); // Store stream reference
+  const animationRef = useRef(null); // Store animation frame ID
+  const scanIntervalRef = useRef(null); // For continuous scanning
 
-  // Load checked-in attendees on initial render
+  // Start camera automatically when component mounts and handle cleanup
   useEffect(() => {
+    console.log("Component mounted, starting camera automatically");
+    startCamera();
     fetchCheckedInAttendees();
     
-    // Clean up video stream when component unmounts
+    // Clean up resources when component unmounts
     return () => {
       stopCamera();
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+      }
     };
   }, []);
+
+  // Restart camera when tab changes
+  useEffect(() => {
+    stopCamera();
+    startCamera();
+  }, [activeTab]);
 
   // Fetch all checked-in attendees
   const fetchCheckedInAttendees = async () => {
@@ -38,7 +50,6 @@ const CheckInOut = () => {
       
       for (const doc of snapshot.docs) {
         const data = doc.data();
-        // Get the full registration data for each checked-in attendee
         if (data.userId) {
           const registrationQuery = query(
             collection(db, "registrations"), 
@@ -64,25 +75,37 @@ const CheckInOut = () => {
     }
   };
 
-  // Start camera for QR scanning
+  // Start camera and QR scanning
   const startCamera = async () => {
+    if (attendee) {
+      // If we have an attendee, don't start the camera
+      return;
+    }
+    
     try {
-      // Reset state
-      resetScan();
+      // Reset states
+      setScannedData(null);
       setCameraError(null);
       
-      // Stop any existing stream first
+      // Stop any existing stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
       
-      // Request camera access with explicit constraints
+      // Clear any existing animation frames
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      
+      // Try to access camera with appropriate constraints
       const constraints = { 
         video: { 
-          facingMode: "environment",
+          facingMode: { ideal: "environment" },
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        }
+        } 
       };
       
       console.log("Requesting camera access with constraints:", constraints);
@@ -92,27 +115,29 @@ const CheckInOut = () => {
       streamRef.current = stream;
       
       if (videoRef.current) {
-        console.log("Setting video source and starting playback");
+        console.log("Setting video source");
         videoRef.current.srcObject = stream;
         
-        // Wait for video to be ready before starting scan
+        // Wait for video to be loaded before starting scan
         videoRef.current.onloadedmetadata = () => {
+          console.log("Video metadata loaded");
           videoRef.current.play()
             .then(() => {
               console.log("Video playback started successfully");
               setScanning(true);
+              // Start scanning in a loop
               scanQRCode();
             })
             .catch(err => {
               console.error("Error starting video playback:", err);
-              setCameraError("Failed to start video playback. Please try again.");
+              setCameraError("Failed to start video playback. Please refresh the page.");
             });
         };
       }
     } catch (error) {
       console.error("Error accessing camera:", error);
       if (error.name === 'NotAllowedError') {
-        setCameraError("Camera access denied. Please allow camera access in your browser settings.");
+        setCameraError("Camera access denied. Please allow camera access in your browser settings and refresh the page.");
       } else if (error.name === 'NotFoundError') {
         setCameraError("No camera found. Please make sure your device has a camera.");
       } else {
@@ -128,6 +153,12 @@ const CheckInOut = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
+    }
+    
+    // Stop any scanning interval
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
     }
     
     // Stop all tracks in the stream
@@ -152,11 +183,12 @@ const CheckInOut = () => {
       return;
     }
     
-    const canvas = canvasRef.current;
     const video = videoRef.current;
+    const canvas = canvasRef.current;
     
+    // Make sure video is ready
     if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      // Not enough video data available yet
+      // Not enough video data available yet, try again soon
       animationRef.current = requestAnimationFrame(scanQRCode);
       return;
     }
@@ -181,12 +213,19 @@ const CheckInOut = () => {
       
       if (code) {
         console.log("QR Code detected:", code.data);
-        setScannedData(code.data);
-        lookupAttendee(code.data);
-        stopCamera();
+        
+        // Only process the code if we don't already have attendee data
+        if (!attendee && !loading) {
+          setScannedData(code.data);
+          lookupAttendee(code.data);
+          // Don't stop camera here, just pause scanning while processing
+          setScanning(false);
+        }
       } else {
-        // Continue scanning
-        animationRef.current = requestAnimationFrame(scanQRCode);
+        // Continue scanning if no QR code found and no attendee being processed
+        if (!attendee && !loading) {
+          animationRef.current = requestAnimationFrame(scanQRCode);
+        }
       }
     } catch (error) {
       console.error("Error scanning QR code:", error);
@@ -210,6 +249,13 @@ const CheckInOut = () => {
           type: "error" 
         });
         setAttendee(null);
+        // Restart scanning after a brief pause
+        setTimeout(() => {
+          if (!attendee) {
+            setScanning(true);
+            scanQRCode();
+          }
+        }, 2000);
       } else {
         const registrationData = querySnapshot.docs[0].data();
         
@@ -252,6 +298,13 @@ const CheckInOut = () => {
         text: "Error looking up attendee information.", 
         type: "error" 
       });
+      // Restart scanning after error
+      setTimeout(() => {
+        if (!attendee) {
+          setScanning(true);
+          scanQRCode();
+        }
+      }, 2000);
     } finally {
       setLoading(false);
     }
@@ -277,6 +330,11 @@ const CheckInOut = () => {
       
       // Refresh checked-in list
       await fetchCheckedInAttendees();
+      
+      // Auto-reset after successful check-in
+      setTimeout(() => {
+        resetScan();
+      }, 3000);
     } catch (error) {
       console.error("Error during check-in:", error);
       setMessage({ 
@@ -304,6 +362,11 @@ const CheckInOut = () => {
       
       // Refresh checked-in list
       await fetchCheckedInAttendees();
+      
+      // Auto-reset after successful check-out
+      setTimeout(() => {
+        resetScan();
+      }, 3000);
     } catch (error) {
       console.error("Error during check-out:", error);
       setMessage({ 
@@ -315,18 +378,20 @@ const CheckInOut = () => {
     }
   };
 
-  // Reset the current scan
+  // Reset the current scan and restart camera
   const resetScan = () => {
     setScannedData(null);
     setAttendee(null);
     setMessage({ text: '', type: '' });
+    
+    // Start camera again for new scan
+    startCamera();
   };
 
   // Switch between check-in and check-out tabs
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     resetScan();
-    stopCamera();
   };
 
   return (
@@ -377,21 +442,22 @@ const CheckInOut = () => {
           
           {/* Camera and scanning UI */}
           <div className="mb-6">
-            {scanning ? (
-              <div className="relative w-full max-w-md mx-auto">
-                <video 
-                  ref={videoRef} 
-                  className="w-full h-64 object-cover border-2 border-fuchsia-500 rounded-lg"
-                  muted 
-                  playsInline
-                  autoPlay
-                />
-                <canvas 
-                  ref={canvasRef} 
-                  className="absolute top-0 left-0 w-full h-full hidden"
-                />
-                
-                {/* Scanner overlay */}
+            <div className="relative w-full max-w-md mx-auto">
+              {/* Always show video element */}
+              <video 
+                ref={videoRef} 
+                className={`w-full h-64 object-cover border-2 border-fuchsia-500 rounded-lg ${scanning ? '' : 'opacity-50'}`}
+                muted 
+                playsInline
+                autoPlay
+              />
+              <canvas 
+                ref={canvasRef} 
+                className="absolute top-0 left-0 w-full h-full hidden"
+              />
+              
+              {/* Scanner overlay - only show when actively scanning */}
+              {scanning && !attendee && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-48 h-48 border-2 border-fuchsia-500 rounded-lg relative">
                     <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-fuchsia-500 rounded-tl-lg"></div>
@@ -400,40 +466,36 @@ const CheckInOut = () => {
                     <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-fuchsia-500 rounded-br-lg"></div>
                   </div>
                 </div>
-                
-                <button
-                  onClick={stopCamera}
-                  className="mt-4 w-full py-2 bg-fuchsia-700 hover:bg-fuchsia-800 text-white rounded-lg font-medium transition-all"
-                >
-                  Cancel Scanning
-                </button>
-              </div>
-            ) : (
-              <div className="text-center">
-                {cameraError ? (
-                  <div className="bg-red-900/40 border border-red-500/50 rounded-lg p-4 mb-4">
-                    <p className="text-red-200">{cameraError}</p>
-                    <button
-                      onClick={() => setCameraError(null)}
-                      className="mt-2 py-1 px-4 bg-red-700 hover:bg-red-800 text-white rounded-lg text-sm font-medium transition-all"
+              )}
+              
+              {/* Scanning indicator */}
+              {scanning && !attendee && (
+                <div className="absolute inset-x-0 top-2 flex justify-center">
+                  <div className="bg-black/60 px-3 py-1 rounded-full flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                    <span className="text-sm">Scanning for QR Code</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Camera error message */}
+              {cameraError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <div className="bg-red-900/80 p-4 rounded-lg max-w-xs text-center">
+                    <p className="text-white mb-3">{cameraError}</p>
+                    <button 
+                      onClick={() => {
+                        setCameraError(null);
+                        startCamera();
+                      }}
+                      className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
                     >
-                      Dismiss
+                      Retry
                     </button>
                   </div>
-                ) : (
-                  <button
-                    onClick={startCamera}
-                    className="py-3 px-6 bg-gradient-to-r from-fuchsia-700 to-purple-700 hover:from-fuchsia-800 hover:to-purple-800 text-white rounded-lg font-medium transition-all flex items-center justify-center mx-auto"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scan QR Code
-                  </button>
-                )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Status message */}
