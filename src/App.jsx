@@ -1,12 +1,12 @@
-// App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
-``
+
 // Import components
-import Authentication from './Authentication'; 
+import Authentication from './Authentication';
 import Booking from './Booking';
+import CheckInOut from './CheckInOut';
 
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -173,7 +173,6 @@ const Home = () => {
   );
 };
 
-// Optional: Add a secure route component to protect routes
 const SecureRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -198,7 +197,6 @@ const SecureRoute = ({ children }) => {
 
 function App() {
   useEffect(() => {
-    // Add the CSS animations to the document head
     const style = document.createElement('style');
     style.textContent = `
       @keyframes pulsate {
@@ -263,6 +261,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Authentication />} />
+        <Route path="/CheckInOut" element={<CheckInOut />} />
         <Route path="/booking" element={
           <SecureRoute>
             <Booking />
