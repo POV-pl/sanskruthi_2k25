@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useState, useEffect,useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -7,6 +7,58 @@ import { auth } from './firebase';
 import Authentication from './Authentication';
 import Booking from './Booking';
 import CheckInOut from './CheckInOut';
+
+// Navbar Component
+const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-3 bg-black/50 backdrop-blur-sm border-b border-fuchsia-500/30">
+      <div className="flex items-center">
+        <Link to="/" className="font-['Orbitron'] text-white text-lg font-bold mr-6">
+          SANSKRUTHI
+        </Link>
+      </div>
+      
+      <div className="flex items-center space-x-2 md:space-x-4">
+        {/* Music Control Button */}
+        <button
+          onClick={toggleMusic}
+          className="text-white p-2 rounded-full hover:bg-fuchsia-900/30 transition-all duration-300"
+          aria-label={isMusicPlaying ? "Pause music" : "Play music"}
+        >
+          {isMusicPlaying ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          )}
+        </button>
+        
+        {/* CheckInOut Button */}
+        <Link 
+          to="/CheckInOut"
+          className="font-['Orbitron'] py-1.5 px-3 text-xs md:text-sm text-white border border-fuchsia-500 rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-900/30"
+          style={{
+            boxShadow: '0 0 3px #c417e0',
+          }}
+        >
+          CHECK-IN/OUT
+        </Link>
+        
+        {/* Conditional Book Ticket or Login Button */}
+        <Link 
+          to={user ? "/booking" : "/auth"}
+          className="font-['Orbitron'] py-1.5 px-3 text-xs md:text-sm bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
+        >
+          {user ? "BOOK TICKET" : "LOGIN"}
+        </Link>
+      </div>
+    </nav>
+  );
+};
 
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -107,7 +159,10 @@ const Home = () => {
 
   return (
     <div className="h-screen w-screen relative overflow-hidden flex justify-center items-center">
-      {/* Background Audio Player - Added autoplay and muted attributes to help with autoplay policies */}
+      {/* Navbar */}
+      <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
+      
+      {/* Background Audio Player */}
       <audio 
         ref={audioRef}
         src="/music/background-music.mp3" // Replace with your music file path
@@ -115,9 +170,6 @@ const Home = () => {
         autoPlay
         preload="auto"
       />
-      
-      {/* Music Control Button - Positioned at top-right corner with enhanced visibility */}
-   
 
       {/* Animated background with the boombox GIF */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
@@ -131,7 +183,6 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
       </div>
       
-      {/* Rest of your existing code */}
       {/* Animated grid overlay */}
       <div className="absolute inset-0 z-30 opacity-25" 
         style={{
@@ -141,13 +192,13 @@ const Home = () => {
         }}
       ></div>
 
-      {/* Content container */}
-      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col items-center ${
+      {/* Content container - Added pt-20 to allow space for the navbar */}
+      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col items-center pt-20 ${
         isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       } transition-all duration-1000 ease-in-out`}>
         
         {/* College info with neon effect */}
-        <div className="text-center mb-25 md:mb-10">
+        <div className="text-center mb-15 md:mb-8">
           <h2 className="font-['Orbitron'] text-lg md:text-2xl lg:text-3xl font-bold text-white tracking-wider px-4 py-2"
               style={{
                 textShadow: '0 0 5px #c417e0, 0 0 10px #c417e0, 0 0 20px #c417e0',
@@ -163,13 +214,13 @@ const Home = () => {
           </p>
         </div>
         
-        {/* Event title with intense neon effect */}
-        <div className="my-8 md:my-16 relative">
+        {/* Event title with intense neon effect - Reduced vertical margins */}
+        <div className="my-6 md:my-10 relative">
           {/* Animated glow circle behind title */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[140%] rounded-full bg-purple-900/20 blur-xl"
                style={{ animation: 'pulse 3s infinite' }}></div>
                
-          <h1 className="font-['Orbitron'] text-4xl sm:text-6xl md:text-8xl font-black tracking-wider text-white mb-4"
+          <h1 className="font-['Orbitron'] text-4xl sm:text-6xl md:text-7xl font-black tracking-wider text-white mb-4"
               style={{
                 textShadow: '0 0 7px #ff00ff, 0 0 10px #ff00ff, 0 0 21px #ff00ff, 0 0 42px #c417e0, 0 0 82px #c417e0, 0 0 92px #c417e0',
                 animation: 'flickerText 3s infinite alternate'
@@ -177,7 +228,7 @@ const Home = () => {
             SANSKRUTHI
           </h1>
           
-          <div className="font-['Orbitron'] text-2xl sm:text-3xl md:text-5xl text-center font-bold text-white mt-2"
+          <div className="font-['Orbitron'] text-2xl sm:text-3xl md:text-4xl text-center font-bold text-white mt-2"
                style={{
                  textShadow: '0 0 5px #17b2e0, 0 0 10px #17b2e0, 0 0 15px #17b2e0',
                  animation: 'flickerSmall 2s infinite alternate' 
@@ -186,8 +237,8 @@ const Home = () => {
           </div>
         </div>
         
-        {/* DJ deck animated equalizer */}
-        <div className="w-full max-w-md flex items-end justify-center gap-1 mb-10 h-16">
+        {/* DJ deck animated equalizer - Reduced height */}
+        <div className="w-full max-w-md flex items-end justify-center gap-1 mb-8 h-12">
           {[...Array(32)].map((_, i) => (
             <div 
               key={i} 
@@ -206,7 +257,7 @@ const Home = () => {
         <div className="mt-4 md:mt-6 flex flex-col items-center">
           <Link 
             to={user ? "/booking" : "/auth"}
-            className="font-['Orbitron'] py-4 px-10 text-md md:text-xl bg-transparent text-white border-2 border-fuchsia-500 rounded-full font-semibold tracking-wider transition-all duration-500"
+            className="font-['Orbitron'] py-3 px-8 text-md md:text-xl bg-transparent text-white border-2 border-fuchsia-500 rounded-full font-semibold tracking-wider transition-all duration-500"
             style={{
               boxShadow: '0 0 5px #c417e0, 0 0 10px #c417e0',
               animation: 'borderPulse 1.5s infinite alternate'
@@ -230,9 +281,9 @@ const Home = () => {
           </p>
           
           {/* Social media with animated icons */}
-          <div className="flex items-center gap-6 mt-8">
+          <div className="flex items-center gap-6 mt-6">
             <a href="#" className="text-white hover:text-fuchsia-400 transition-all duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
@@ -265,6 +316,7 @@ const Home = () => {
   );
 };
 
+// SecureRoute Component for protected routes
 const SecureRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -285,6 +337,47 @@ const SecureRoute = ({ children }) => {
   }
 
   return isAuthenticated ? children : <Navigate to="/auth" />;
+};
+
+// Layout component to wrap pages with the Navbar
+const Layout = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
+      <audio 
+        ref={audioRef}
+        src="/music/background-music.mp3"
+        loop
+        preload="auto"
+      />
+      <div className="pt-16">
+        {children}
+      </div>
+    </div>
+  );
 };
 
 function App() {
@@ -352,11 +445,21 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/auth" element={<Authentication />} />
-        <Route path="/CheckInOut" element={<CheckInOut />} />
+        <Route path="/auth" element={
+          <Layout>
+            <Authentication />
+          </Layout>
+        } />
+        <Route path="/CheckInOut" element={
+          <Layout>
+            <CheckInOut />
+          </Layout>
+        } />
         <Route path="/booking" element={
           <SecureRoute>
-            <Booking />
+            <Layout>
+              <Booking />
+            </Layout>
           </SecureRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
