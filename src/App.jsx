@@ -117,26 +117,7 @@ const Home = () => {
       />
       
       {/* Music Control Button - Positioned at top-right corner with enhanced visibility */}
-      <button 
-        onClick={toggleMusic}
-        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-fuchsia-900/50 hover:bg-fuchsia-800/70 transition-all duration-300"
-        style={{
-          boxShadow: isMusicPlaying ? '0 0 5px #c417e0, 0 0 10px #c417e0' : 'none',
-          animation: !isMusicPlaying ? 'pulse 2s infinite' : 'none'
-        }}
-        aria-label={isMusicPlaying ? "Pause background music" : "Play background music"}
-      >
-        {isMusicPlaying ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="6" y="4" width="4" height="16"></rect>
-            <rect x="14" y="4" width="4" height="16"></rect>
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-          </svg>
-        )}
-      </button>
+   
 
       {/* Animated background with the boombox GIF */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
