@@ -1,14 +1,29 @@
 // App.jsx
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
+``
+// Import components
+import Authentication from './Authentication'; 
+import Booking from './Booking';
 
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsCheckingAuth(false);
+    });
+
     setTimeout(() => {
       setIsLoaded(true);
     }, 500);
+
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -19,14 +34,14 @@ const Home = () => {
         <img 
           src="/200w.gif" 
           alt="DJ Boombox" 
-          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full object-cover z-0 opacity-100"
+          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full object-cover z-0 opacity-80"
           style={{ filter: 'hue-rotate(280deg) brightness(0.7)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
       </div>
       
       {/* Animated grid overlay */}
-      <div className="absolute inset-0 z-30 opacity-20" 
+      <div className="absolute inset-0 z-30 opacity-25" 
         style={{
           backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent)',
           backgroundSize: '50px 50px',
@@ -98,7 +113,7 @@ const Home = () => {
         {/* CTA button with hover effects */}
         <div className="mt-4 md:mt-6 flex flex-col items-center">
           <Link 
-            to="/tickets" 
+            to={user ? "/booking" : "/auth"}
             className="font-['Orbitron'] py-4 px-10 text-md md:text-xl bg-transparent text-white border-2 border-fuchsia-500 rounded-full font-semibold tracking-wider transition-all duration-500"
             style={{
               boxShadow: '0 0 5px #c417e0, 0 0 10px #c417e0',
@@ -124,8 +139,7 @@ const Home = () => {
           
           {/* Social media with animated icons */}
           <div className="flex items-center gap-6 mt-8">
-            <a href="#" className="text-white hover:text-fuchsia-400 transition-all duration-300"
-               >
+            <a href="#" className="text-white hover:text-fuchsia-400 transition-all duration-300">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
@@ -157,6 +171,29 @@ const Home = () => {
       </div>
     </div>
   );
+};
+
+// Optional: Add a secure route component to protect routes
+const SecureRoute = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setIsChecking(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (isChecking) {
+    return <div className="h-screen w-screen flex items-center justify-center bg-black">
+      <div className="text-fuchsia-500 text-xl">Loading...</div>
+    </div>;
+  }
+
+  return isAuthenticated ? children : <Navigate to="/auth" />;
 };
 
 function App() {
@@ -225,8 +262,13 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* <Route path="/tickets" element={<Tickets />} /> */}
-        {/* <Route path="/verify/:ticketId" element={<VerifyTicket />} /> */}
+        <Route path="/auth" element={<Authentication />} />
+        <Route path="/booking" element={
+          <SecureRoute>
+            <Booking />
+          </SecureRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
