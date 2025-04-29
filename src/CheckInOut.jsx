@@ -1,7 +1,8 @@
 // CheckInOut.jsx
 import { useState, useEffect, useRef } from 'react';
-import { collection, getDocs, query, where, addDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase'; // Make sure path is correct
+import jsQR from 'jsqr'; // Import jsQR directly instead of dynamic import
 
 const CheckInOut = () => {
   const [activeTab, setActiveTab] = useState('check-in');
@@ -15,30 +16,16 @@ const CheckInOut = () => {
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  let videoStream = null;
+  const streamRef = useRef(null); // Store stream reference to properly clean up
+  const animationRef = useRef(null); // Store animation frame ID for cleanup
 
-  // Load the QR scanner library dynamically
+  // Load checked-in attendees on initial render
   useEffect(() => {
-    const loadQrScanner = async () => {
-      try {
-        await import('jsqr');
-        console.log('QR Scanner loaded');
-      } catch (error) {
-        console.error('Failed to load QR Scanner:', error);
-        setCameraError('Failed to load QR scanning library');
-      }
-    };
-    
-    loadQrScanner();
-    
-    // Load checked-in attendees on initial render
     fetchCheckedInAttendees();
     
     // Clean up video stream when component unmounts
     return () => {
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
@@ -80,69 +67,131 @@ const CheckInOut = () => {
   // Start camera for QR scanning
   const startCamera = async () => {
     try {
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
+      // Reset state
+      resetScan();
+      setCameraError(null);
+      
+      // Stop any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
       
-      setScannedData(null);
-      setAttendee(null);
-      setMessage({ text: '', type: '' });
+      // Request camera access with explicit constraints
+      const constraints = { 
+        video: { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      };
       
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
-      });
+      console.log("Requesting camera access with constraints:", constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      videoStream = stream;
+      // Store stream in ref for later cleanup
+      streamRef.current = stream;
+      
       if (videoRef.current) {
+        console.log("Setting video source and starting playback");
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
-        setScanning(true);
-        scanQRCode();
+        
+        // Wait for video to be ready before starting scan
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play()
+            .then(() => {
+              console.log("Video playback started successfully");
+              setScanning(true);
+              scanQRCode();
+            })
+            .catch(err => {
+              console.error("Error starting video playback:", err);
+              setCameraError("Failed to start video playback. Please try again.");
+            });
+        };
       }
     } catch (error) {
       console.error("Error accessing camera:", error);
-      setCameraError("Unable to access camera. Please make sure you have given camera permission.");
+      if (error.name === 'NotAllowedError') {
+        setCameraError("Camera access denied. Please allow camera access in your browser settings.");
+      } else if (error.name === 'NotFoundError') {
+        setCameraError("No camera found. Please make sure your device has a camera.");
+      } else {
+        setCameraError(`Unable to access camera: ${error.message}`);
+      }
       setScanning(false);
     }
   };
 
   // Stop camera
   const stopCamera = () => {
-    if (videoStream) {
-      videoStream.getTracks().forEach(track => track.stop());
-      setScanning(false);
+    // Cancel any ongoing animation frame
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
+    
+    // Stop all tracks in the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
+    
+    // Clear video source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
+    setScanning(false);
   };
 
   // Process frames to scan QR codes
-  const scanQRCode = async () => {
-    if (!scanning) return;
-    
-    // Dynamically import jsQR library
-    const jsQR = (await import('jsqr')).default;
+  const scanQRCode = () => {
+    if (!scanning || !videoRef.current || !canvasRef.current) {
+      return;
+    }
     
     const canvas = canvasRef.current;
     const video = videoRef.current;
     
-    if (!canvas || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-      requestAnimationFrame(scanQRCode);
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      // Not enough video data available yet
+      animationRef.current = requestAnimationFrame(scanQRCode);
       return;
     }
     
     const context = canvas.getContext('2d', { willReadFrequently: true });
+    
+    // Match canvas dimensions to video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    
+    // Draw current video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, canvas.width, canvas.height);
-    
-    if (code) {
-      setScannedData(code.data);
-      lookupAttendee(code.data);
-      stopCamera();
-    } else {
-      requestAnimationFrame(scanQRCode);
+    try {
+      // Get image data for QR code scanning
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // Try to find QR code in the image
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+      
+      if (code) {
+        console.log("QR Code detected:", code.data);
+        setScannedData(code.data);
+        lookupAttendee(code.data);
+        stopCamera();
+      } else {
+        // Continue scanning
+        animationRef.current = requestAnimationFrame(scanQRCode);
+      }
+    } catch (error) {
+      console.error("Error scanning QR code:", error);
+      // Continue scanning despite error
+      animationRef.current = requestAnimationFrame(scanQRCode);
     }
   };
 
@@ -335,6 +384,7 @@ const CheckInOut = () => {
                   className="w-full h-64 object-cover border-2 border-fuchsia-500 rounded-lg"
                   muted 
                   playsInline
+                  autoPlay
                 />
                 <canvas 
                   ref={canvasRef} 
@@ -363,6 +413,12 @@ const CheckInOut = () => {
                 {cameraError ? (
                   <div className="bg-red-900/40 border border-red-500/50 rounded-lg p-4 mb-4">
                     <p className="text-red-200">{cameraError}</p>
+                    <button
+                      onClick={() => setCameraError(null)}
+                      className="mt-2 py-1 px-4 bg-red-700 hover:bg-red-800 text-white rounded-lg text-sm font-medium transition-all"
+                    >
+                      Dismiss
+                    </button>
                   </div>
                 ) : (
                   <button
