@@ -44,7 +44,7 @@ const Booking = () => {
         await checkExistingRegistration(currentUser.uid);
       } else {
         // User is not signed in, redirect to auth page
-        navigate('/auth');
+        navigate('/');
       }
     });
 

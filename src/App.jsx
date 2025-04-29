@@ -1,6 +1,6 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 ``
@@ -12,6 +12,8 @@ const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false); // Track music state
+  const audioRef = useRef(null); // Reference to audio element
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -21,13 +23,121 @@ const Home = () => {
 
     setTimeout(() => {
       setIsLoaded(true);
+      
+      // Attempt to play music immediately when component loads
+      if (audioRef.current) {
+        audioRef.current.volume = 0.4; // Set volume to 40%
+        
+        // Load the audio first (which is allowed without interaction)
+        audioRef.current.load();
+        
+        // Try to play - this may be blocked by browser until user interacts
+        const playPromise = audioRef.current.play();
+        
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log("Autoplay started successfully");
+              setIsMusicPlaying(true);
+            })
+            .catch(error => {
+              console.log("Autoplay prevented by browser:", error);
+              // Will try again on user interaction
+            });
+        }
+      }
     }, 500);
 
-    return () => unsubscribe();
-  }, []);
+    // This function tries to play the music
+    const playMusic = () => {
+      if (audioRef.current && !isMusicPlaying) {
+        audioRef.current.volume = 0.4; // Set volume to 40%
+        audioRef.current.play()
+          .then(() => {
+            setIsMusicPlaying(true);
+            console.log("Music started after user interaction");
+          })
+          .catch(error => {
+            console.log("Audio play failed:", error);
+          });
+      }
+    };
+
+    // Handle user interaction to play music (browser requirement)
+    const handleUserInteraction = (e) => {
+      playMusic();
+      
+      // Remove event listeners after successful play
+      if (isMusicPlaying) {
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('touchstart', handleUserInteraction);
+        document.removeEventListener('keydown', handleUserInteraction);
+      }
+    };
+
+    // Add multiple event listeners for different types of interactions
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+      
+      // Ensure music stops when component unmounts
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, [isMusicPlaying]);
+
+  // Toggle music function
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsMusicPlaying(!isMusicPlaying);
+    }
+  };
 
   return (
     <div className="h-screen w-screen relative overflow-hidden flex justify-center items-center">
+      {/* Background Audio Player - Added autoplay and muted attributes to help with autoplay policies */}
+      <audio 
+        ref={audioRef}
+        src="/music/background-music.mp3" // Replace with your music file path
+        loop
+        autoPlay
+        preload="auto"
+      />
+      
+      {/* Music Control Button - Positioned at top-right corner with enhanced visibility */}
+      <button 
+        onClick={toggleMusic}
+        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-fuchsia-900/50 hover:bg-fuchsia-800/70 transition-all duration-300"
+        style={{
+          boxShadow: isMusicPlaying ? '0 0 5px #c417e0, 0 0 10px #c417e0' : 'none',
+          animation: !isMusicPlaying ? 'pulse 2s infinite' : 'none'
+        }}
+        aria-label={isMusicPlaying ? "Pause background music" : "Play background music"}
+      >
+        {isMusicPlaying ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        )}
+      </button>
+
       {/* Animated background with the boombox GIF */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
@@ -40,6 +150,7 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
       </div>
       
+      {/* Rest of your existing code */}
       {/* Animated grid overlay */}
       <div className="absolute inset-0 z-30 opacity-25" 
         style={{
