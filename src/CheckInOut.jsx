@@ -44,6 +44,14 @@ const CheckInOut = () => {
     };
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    // This useEffect ensures camera is properly restarted when attendee is cleared
+    if (!attendee && isAuthenticated && !scanning) {
+      console.log("Auto-restarting camera after attendee cleared");
+      startCamera();
+    }
+  }, [attendee, isAuthenticated]);
+
   // Restart camera when tab changes
   useEffect(() => {
     if (isAuthenticated) {
@@ -104,24 +112,24 @@ const CheckInOut = () => {
       // If we have an attendee, don't start the camera
       return;
     }
-
+  
     try {
       // Reset states
       setScannedData(null);
       setCameraError(null);
-
+  
       // Stop any existing stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
-
+  
       // Clear any existing animation frames
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
-
+  
       // Try to access camera with appropriate constraints
       const constraints = {
         video: {
@@ -130,17 +138,17 @@ const CheckInOut = () => {
           height: { ideal: 720 }
         }
       };
-
+  
       console.log("Requesting camera access with constraints:", constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
+  
       // Store stream in ref for later cleanup
       streamRef.current = stream;
-
+  
       if (videoRef.current) {
         console.log("Setting video source");
         videoRef.current.srcObject = stream;
-
+  
         // Wait for video to be loaded before starting scan
         videoRef.current.onloadedmetadata = () => {
           console.log("Video metadata loaded");
@@ -148,7 +156,7 @@ const CheckInOut = () => {
             .then(() => {
               console.log("Video playback started successfully");
               setScanning(true);
-              // Start scanning in a loop
+              // Start scanning immediately
               scanQRCode();
             })
             .catch(err => {
@@ -203,54 +211,46 @@ const CheckInOut = () => {
   // Process frames to scan QR codes with optimization for speed
   const scanQRCode = () => {
     if (!scanning || !videoRef.current || !canvasRef.current) {
+      console.log("Not scanning or missing refs");
       return;
     }
-
+  
     const video = videoRef.current;
     const canvas = canvasRef.current;
-
+  
     // Make sure video is ready
     if (video.readyState !== video.HAVE_ENOUGH_DATA) {
       // Not enough video data available yet, try again soon
+      console.log("Not enough video data, retrying soon");
       animationRef.current = requestAnimationFrame(scanQRCode);
       return;
     }
-
-    // Throttle scanning to improve performance (max one scan every 200ms)
-    const now = Date.now();
-    if (now - lastScanTime < 200) {
-      animationRef.current = requestAnimationFrame(scanQRCode);
-      return;
-    }
-
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-
+  
     // Match canvas dimensions to video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
+  
+    const context = canvas.getContext('2d', { willReadFrequently: true });
     // Draw current video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+  
     try {
       // Get image data for QR code scanning
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
+  
       // Try to find QR code in the image
       const code = jsQR(imageData.data, imageData.width, imageData.height, {
         inversionAttempts: "dontInvert",
       });
-
+  
       if (code) {
         console.log("QR Code detected:", code.data);
-        setLastScanTime(now);
-
+        
         // Only process the code if we don't already have attendee data
         if (!attendee && !loading) {
           setScannedData(code.data);
+          setScanning(false); // Pause scanning while processing
           lookupAttendee(code.data);
-          // Don't stop camera here, just pause scanning while processing
-          setScanning(false);
         }
       } else {
         // Continue scanning if no QR code found and no attendee being processed
@@ -273,7 +273,7 @@ const CheckInOut = () => {
       const registrationsRef = collection(db, "registrations");
       const q = query(registrationsRef, where("userId", "==", userId));
       const querySnapshot = await getDocs(q);
-
+  
       if (querySnapshot.empty) {
         setMessage({
           text: "No registration found for this QR code.",
@@ -282,20 +282,17 @@ const CheckInOut = () => {
         setAttendee(null);
         // Restart scanning after a brief pause
         setTimeout(() => {
-          if (!attendee) {
-            setScanning(true);
-            scanQRCode();
-          }
-        }, 1000); // Reduced from 2000 to 1000ms for faster recovery
+          resetScan();
+        }, 1000);
       } else {
         const registrationData = querySnapshot.docs[0].data();
-
+  
         // If checking in, check if already checked in
         if (activeTab === 'check-in') {
           const checkedInRef = collection(db, "checkedIn");
           const checkedInQuery = query(checkedInRef, where("userId", "==", userId));
           const checkedInSnapshot = await getDocs(checkedInQuery);
-
+  
           if (!checkedInSnapshot.empty) {
             const checkInData = checkedInSnapshot.docs[0].data();
             setMessage({
@@ -309,18 +306,24 @@ const CheckInOut = () => {
           const checkedInRef = collection(db, "checkedIn");
           const checkedInQuery = query(checkedInRef, where("userId", "==", userId));
           const checkedInSnapshot = await getDocs(checkedInQuery);
-
+  
           if (checkedInSnapshot.empty) {
             setMessage({
               text: "This attendee has not checked in yet.",
               type: "warning"
             });
+            // Restart scanning after warning
+            setTimeout(() => {
+              resetScan();
+            }, 1500);
+            setLoading(false);
+            return;
           } else {
             const checkInDoc = checkedInSnapshot.docs[0];
             registrationData.checkInId = checkInDoc.id;
           }
         }
-
+  
         setAttendee(registrationData);
       }
     } catch (error) {
@@ -331,11 +334,8 @@ const CheckInOut = () => {
       });
       // Restart scanning after error
       setTimeout(() => {
-        if (!attendee) {
-          setScanning(true);
-          scanQRCode();
-        }
-      }, 1000); // Reduced from 2000 to 1000ms for faster recovery
+        resetScan();
+      }, 1000);
     } finally {
       setLoading(false);
     }
@@ -344,7 +344,7 @@ const CheckInOut = () => {
   // Handle check-in process
   const handleCheckIn = async () => {
     if (!attendee || !attendee.userId) return;
-
+  
     setLoading(true);
     try {
       // Add to checkedIn collection
@@ -353,25 +353,28 @@ const CheckInOut = () => {
         fullName: attendee.fullName,
         checkInTime: new Date()
       });
-
+  
       setMessage({
         text: `Successfully checked in ${attendee.fullName}!`,
         type: "success"
       });
-
+  
       // Refresh checked-in list
       await fetchCheckedInAttendees();
-
-      // Auto-reset after successful check-in
+  
+      // Auto-reset after successful check-in with clear success feedback
       setTimeout(() => {
         resetScan();
-      }, 2000); // Reduced from 3000 to 2000ms for faster workflow
+      }, 1500);
     } catch (error) {
       console.error("Error during check-in:", error);
       setMessage({
         text: "Failed to check in attendee.",
         type: "error"
       });
+      setTimeout(() => {
+        resetScan();
+      }, 1500);
     } finally {
       setLoading(false);
     }
@@ -380,30 +383,33 @@ const CheckInOut = () => {
   // Handle check-out process
   const handleCheckOut = async () => {
     if (!attendee || !attendee.checkInId) return;
-
+  
     setLoading(true);
     try {
       // Delete from checkedIn collection
       await deleteDoc(doc(db, "checkedIn", attendee.checkInId));
-
+  
       setMessage({
         text: `Successfully checked out ${attendee.fullName}!`,
         type: "success"
       });
-
+  
       // Refresh checked-in list
       await fetchCheckedInAttendees();
-
-      // Auto-reset after successful check-out
+  
+      // Auto-reset after successful check-out with clear success feedback
       setTimeout(() => {
         resetScan();
-      }, 2000); // Reduced from 3000 to 2000ms for faster workflow
+      }, 1500);
     } catch (error) {
       console.error("Error during check-out:", error);
       setMessage({
         text: "Failed to check out attendee.",
         type: "error"
       });
+      setTimeout(() => {
+        resetScan();
+      }, 1500);
     } finally {
       setLoading(false);
     }
@@ -414,9 +420,15 @@ const CheckInOut = () => {
     setScannedData(null);
     setAttendee(null);
     setMessage({ text: '', type: '' });
-
-    // Start camera again for new scan
-    startCamera();
+    
+    // Stop any existing camera stream
+    stopCamera();
+    
+    // Short delay before restarting camera to ensure clean restart
+    setTimeout(() => {
+      // Start camera again for new scan
+      startCamera();
+    }, 100);
   };
 
   // Switch between check-in and check-out tabs
