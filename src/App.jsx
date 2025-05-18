@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
+import f1 from './assets/f1.jpg';
 
 // Import components
 import Authentication from './Authentication';
@@ -10,10 +11,36 @@ import CheckInOut from './CheckInOut';
 
 // Navbar Component
 const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
+  const [tapCount, setTapCount] = useState(0);
+  const tapTimer = useRef(null);
+
+  const handleLogoTap = () => {
+    setTapCount(prevCount => prevCount + 1);
+    
+    // Clear any existing timer
+    if (tapTimer.current) {
+      clearTimeout(tapTimer.current);
+    }
+    
+    // Set a new timer to reset tap count after 500ms
+    tapTimer.current = setTimeout(() => {
+      // If double tap detected
+      if (tapCount === 1) {
+        // Navigate to CheckInOut page
+        window.location.href = "/CheckInOut";
+      }
+      setTapCount(0);
+    }, 500);
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-3 bg-black/50 backdrop-blur-sm border-b border-fuchsia-500/30">
       <div className="flex items-center">
-        <Link to="/" className="font-['Orbitron'] text-white text-lg font-bold mr-6">
+        <Link 
+          to="/" 
+          className="font-['Orbitron'] text-white text-lg font-bold mr-6"
+          onClick={handleLogoTap}
+        >
           SANSKRUTHI
         </Link>
       </div>
@@ -37,15 +64,24 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
           )}
         </button>
         
-        {/* CheckInOut Button */}
+        {/* Fashion Show Button - Improved UI */}
         <Link 
-          to="/CheckInOut"
-          className="font-['Orbitron'] py-1.5 px-3 text-xs md:text-sm text-white border border-fuchsia-500 rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-900/30"
+          to="/fashion-show"
+          className="font-['Orbitron'] py-1.5 px-3 text-xs md:text-sm text-white border border-fuchsia-500 rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-900/30 flex items-center gap-1"
           style={{
             boxShadow: '0 0 3px #c417e0',
           }}
         >
-          CHECK-IN/OUT
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-fuchsia-300">
+            <path d="M12 1v4"></path>
+            <path d="M5 8l2 2"></path>
+            <path d="M17 8l-2 2"></path>
+            <path d="M12 16l-3-2"></path>
+            <path d="M12 16l3-2"></path>
+            <path d="M12 16v4"></path>
+            <path d="M8 12a4 4 0 0 1 8 0"></path>
+          </svg>
+          FASHION SHOW
         </Link>
         
         {/* Conditional Book Ticket or Login Button */}
@@ -75,85 +111,91 @@ const Home = () => {
 
     setTimeout(() => {
       setIsLoaded(true);
-      
-      // Attempt to play music immediately when component loads
-      if (audioRef.current) {
-        audioRef.current.volume = 0.4; // Set volume to 40%
-        
-        // Load the audio first (which is allowed without interaction)
-        audioRef.current.load();
-        
-        // Try to play - this may be blocked by browser until user interacts
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              console.log("Autoplay started successfully");
-              setIsMusicPlaying(true);
-            })
-            .catch(error => {
-              console.log("Autoplay prevented by browser:", error);
-              // Will try again on user interaction
-            });
-        }
-      }
     }, 500);
 
-    // This function tries to play the music
-    const playMusic = () => {
+    // Create audio element programmatically
+    const audio = new Audio('/music/background-music.mp3');
+    audio.loop = true;
+    audio.volume = 0.4;
+    audio.preload = 'auto';
+    audioRef.current = audio;
+
+    // Clean up function
+    return () => {
+      unsubscribe();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Handle user interaction - Simplified and improved for better browser compatibility
+  useEffect(() => {
+    const handleUserInteraction = () => {
       if (audioRef.current && !isMusicPlaying) {
-        audioRef.current.volume = 0.4; // Set volume to 40%
-        audioRef.current.play()
-          .then(() => {
-            setIsMusicPlaying(true);
-            console.log("Music started after user interaction");
-          })
-          .catch(error => {
-            console.log("Audio play failed:", error);
-          });
+        try {
+          // Store the play promise
+          const playPromise = audioRef.current.play();
+          
+          // Modern browsers return a promise from play()
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setIsMusicPlaying(true);
+                console.log("Music started successfully");
+              })
+              .catch(error => {
+                console.error("Audio play failed:", error);
+                // Keep trying on autoplay failures
+                setTimeout(() => {
+                  if (!isMusicPlaying && audioRef.current) {
+                    audioRef.current.play().catch(e => console.error("Retry failed:", e));
+                  }
+                }, 1000);
+              });
+          }
+        } catch (error) {
+          console.error("Error playing audio:", error);
+        }
       }
     };
 
-    // Handle user interaction to play music (browser requirement)
-    const handleUserInteraction = (e) => {
-      playMusic();
-      
-      // Remove event listeners after successful play
-      if (isMusicPlaying) {
-        document.removeEventListener('click', handleUserInteraction);
-        document.removeEventListener('touchstart', handleUserInteraction);
-        document.removeEventListener('keydown', handleUserInteraction);
-      }
-    };
-
-    // Add multiple event listeners for different types of interactions
+    // Add event listeners for user interaction
     document.addEventListener('click', handleUserInteraction);
     document.addEventListener('touchstart', handleUserInteraction);
     document.addEventListener('keydown', handleUserInteraction);
 
     return () => {
-      unsubscribe();
+      // Remove event listeners
       document.removeEventListener('click', handleUserInteraction);
       document.removeEventListener('touchstart', handleUserInteraction);
       document.removeEventListener('keydown', handleUserInteraction);
-      
-      // Ensure music stops when component unmounts
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
     };
   }, [isMusicPlaying]);
 
-  // Toggle music function
+  // Toggle music function - Improved to handle play/pause better
   const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
+    if (!audioRef.current) return;
+    
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } else {
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsMusicPlaying(true);
+          })
+          .catch(error => {
+            console.error("Play failed:", error);
+            // Force unmute in case browser has muted it
+            audioRef.current.muted = false;
+            audioRef.current.volume = 0.4;
+          });
       }
-      setIsMusicPlaying(!isMusicPlaying);
     }
   };
 
@@ -162,15 +204,6 @@ const Home = () => {
       {/* Navbar */}
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       
-      {/* Background Audio Player */}
-      <audio 
-        ref={audioRef}
-        src="/music/background-music.mp3" // Replace with your music file path
-        loop
-        autoPlay
-        preload="auto"
-      />
-
       {/* Animated background with the boombox GIF */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
@@ -350,31 +383,115 @@ const Layout = ({ children }) => {
       setUser(currentUser);
     });
 
-    return () => unsubscribe();
+    // Create audio element programmatically for layout pages
+    const audio = new Audio('/music/background-music.mp3');
+    audio.loop = true;
+    audio.volume = 0.4;
+    audio.preload = 'auto';
+    audioRef.current = audio;
+
+    return () => {
+      unsubscribe();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
+  // Fixed toggle music function
   const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
+    if (!audioRef.current) return;
+    
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+      setIsMusicPlaying(false);
+    } else {
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsMusicPlaying(true);
+          })
+          .catch(error => {
+            console.error("Play failed:", error);
+            // Force unmute in case browser has muted it
+            audioRef.current.muted = false;
+            audioRef.current.volume = 0.4;
+          });
       }
-      setIsMusicPlaying(!isMusicPlaying);
     }
   };
 
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
-      <audio 
-        ref={audioRef}
-        src="/music/background-music.mp3"
-        loop
-        preload="auto"
-      />
       <div className="pt-16">
         {children}
+      </div>
+    </div>
+  );
+};
+
+// Fashion Show Component
+const FashionShow = () => {
+  return (
+    <div className="container mx-auto px-4 py-10">
+      <div className="max-w-4xl mx-auto">
+        {/* Fashion Show Poster */}
+        <div className="relative rounded-lg overflow-hidden border-2 border-fuchsia-500 mb-8"
+             style={{ boxShadow: '0 0 15px #c417e0' }}>
+         <img 
+  src={f1} 
+  alt="Fashion Show Poster" 
+  className="w-full h-auto"
+/>
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <h2 className="font-['Orbitron'] text-3xl md:text-4xl font-bold text-white mb-2"
+                style={{ textShadow: '0 0 10px #c417e0, 0 0 20px #c417e0' }}>
+              SANSKRUTHI FASHION SHOW
+            </h2>
+            <p className="text-white/90 text-lg">Showcase your style on the biggest stage!</p>
+          </div>
+        </div>
+        
+        {/* Registration Info */}
+        <div className="bg-black/50 backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6 mb-8">
+          <h3 className="font-['Orbitron'] text-2xl text-white mb-4"
+              style={{ textShadow: '0 0 5px #c417e0' }}>
+            REGISTRATION
+          </h3>
+          <p className="text-white/90 mb-6">
+            Join us for an unforgettable night of fashion and creativity. Show off your unique style and compete for amazing prizes!
+          </p>
+          <a 
+            href="https://forms.google.com/your-gform-link" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="font-['Orbitron'] inline-block py-3 px-6 bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
+          >
+            REGISTER NOW
+          </a>
+        </div>
+        
+        {/* Event Details */}
+        <div className="bg-black/50 backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6">
+          <h3 className="font-['Orbitron'] text-2xl text-white mb-4"
+              style={{ textShadow: '0 0 5px #c417e0' }}>
+            EVENT DETAILS
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-fuchsia-300 text-lg mb-2">Date & Time</h4>
+              <p className="text-white">May 25, 2025 | 6:00 PM</p>
+            </div>
+            
+      
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -453,6 +570,11 @@ function App() {
         <Route path="/CheckInOut" element={
           <Layout>
             <CheckInOut />
+          </Layout>
+        } />
+        <Route path="/fashion-show" element={
+          <Layout>
+            <FashionShow />
           </Layout>
         } />
         <Route path="/booking" element={

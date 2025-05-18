@@ -1,10 +1,11 @@
-// Booking.jsx
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from './firebase'; // Make sure path is correct
+// Booking.jsx
 
+// ... rest of your code
 const Booking = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState(null);
@@ -13,6 +14,8 @@ const Booking = () => {
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [verifiedDetails, setVerifiedDetails] = useState(false);
+  const [aadhaarError, setAadhaarError] = useState('');
   const fileInputRef = useRef(null);
   const ticketRef = useRef(null);
   
@@ -22,6 +25,7 @@ const Booking = () => {
     phone: '',
     usn: '',
     collegeName: '',
+    aadhaarNumber: '',
     referralSource: '',
     imageUrl: ''
   });
@@ -84,10 +88,35 @@ const Booking = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Handle Aadhaar number validation
+    if (name === 'aadhaarNumber') {
+      // Only allow digits
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Limit to 12 digits
+      const truncated = digitsOnly.slice(0, 12);
+      
+      if (truncated.length > 0 && truncated.length < 12) {
+        setAadhaarError('Aadhaar number must be 12 digits');
+      } else {
+        setAadhaarError('');
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: truncated
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const handleVerificationChange = (e) => {
+    setVerifiedDetails(e.target.checked);
   };
 
   const handleImageUpload = async (e) => {
@@ -134,13 +163,25 @@ const Booking = () => {
       return;
     }
 
+    if (!verifiedDetails) {
+      alert("Please verify your details by checking the confirmation box");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.aadhaarNumber.length !== 12) {
+      setAadhaarError('Aadhaar number must be 12 digits');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       // Add registration to Firestore
       const registrationDocRef = await addDoc(collection(db, "registrations"), {
         ...formData,
         userId: user.uid,
         createdAt: serverTimestamp(),
-        eventDate: "May 17, 2025",
+        eventDate: "June 4, 2025",
         venue: "Dr. Ambedkar Institute of Technology"
       });
 
@@ -263,6 +304,23 @@ const Booking = () => {
           />
         </div>
 
+        {/* Aadhaar Number */}
+        <div>
+          <label htmlFor="aadhaarNumber" className="block text-fuchsia-200 mb-1">Aadhaar Number</label>
+          <input
+            type="text"
+            id="aadhaarNumber"
+            name="aadhaarNumber"
+            value={formData.aadhaarNumber}
+            onChange={handleInputChange}
+            required
+            placeholder="12 digit Aadhaar number"
+            className={`w-full bg-black/30 border ${aadhaarError ? 'border-red-500' : 'border-fuchsia-500/50'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500`}
+          />
+          {aadhaarError && <p className="text-red-400 text-xs mt-1">{aadhaarError}</p>}
+          <p className="text-fuchsia-300 text-xs mt-1">Must be a valid 12-digit Aadhaar number</p>
+        </div>
+
         {/* USN */}
         <div>
           <label htmlFor="usn" className="block text-fuchsia-200 mb-1">USN (if applicable)</label>
@@ -313,6 +371,7 @@ const Booking = () => {
         {/* Image Upload */}
         <div>
           <label className="block text-fuchsia-200 mb-1">Your Photo</label>
+          <p className="text-fuchsia-300 text-xs mb-2">Please upload a clear, front-facing photo for identification</p>
           <input
             type="file"
             ref={fileInputRef}
@@ -355,7 +414,7 @@ const Booking = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>Upload Photo</span>
+                    <span>Upload Clear Photo</span>
                   </>
                 )}
               </button>
@@ -371,18 +430,34 @@ const Booking = () => {
               FREE ENTRY
             </span>
             <div className="mt-2 text-sm text-fuchsia-300">
-              <p>Event Date: May 17, 2025</p>
+              <p>Event Date: June 4, 2025</p>
               <p>Venue: Dr. Ambedkar Institute of Technology</p>
             </div>
           </div>
+        </div>
+
+        {/* Verification Checkbox */}
+        <div className="mt-4">
+          <label className="flex items-start">
+            <input
+              type="checkbox"
+              checked={verifiedDetails}
+              onChange={handleVerificationChange}
+              required
+              className="mt-1 form-checkbox h-4 w-4 text-fuchsia-600 transition duration-150 ease-in-out"
+            />
+            <span className="ml-2 text-fuchsia-200 text-sm">
+              I verify that all the information provided is correct and accurate. I understand that providing false information may result in the cancellation of my registration.
+            </span>
+          </label>
         </div>
         
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || !formData.imageUrl}
-          className={`w-full mt-6 font-['Orbitron'] py-3 px-6 bg-transparent text-white border-2 ${!formData.imageUrl ? 'border-gray-500 opacity-50' : 'border-fuchsia-500'} rounded-full font-semibold tracking-wider transition-all duration-500 hover:bg-fuchsia-500/20 flex items-center justify-center`}
-          style={formData.imageUrl ? {
+          disabled={isSubmitting || !formData.imageUrl || !verifiedDetails}
+          className={`w-full mt-6 font-['Orbitron'] py-3 px-6 bg-transparent text-white border-2 ${(!formData.imageUrl || !verifiedDetails) ? 'border-gray-500 opacity-50' : 'border-fuchsia-500'} rounded-full font-semibold tracking-wider transition-all duration-500 hover:bg-fuchsia-500/20 flex items-center justify-center`}
+          style={formData.imageUrl && verifiedDetails ? {
             boxShadow: '0 0 5px #c417e0, 0 0 10px #c417e0',
             animation: 'borderPulse 1.5s infinite alternate'
           } : {}}
@@ -418,7 +493,7 @@ const Booking = () => {
               style={{ textShadow: '0 0 5px #c417e0, 0 0 10px #c417e0' }}>
             SANSKRUTHI 2K25
           </h3>
-          <p className="text-fuchsia-200 text-sm">May 17, 2025 | Dr. Ambedkar Institute of Technology</p>
+          <p className="text-fuchsia-200 text-sm">June 4, 2025 | Dr. Ambedkar Institute of Technology</p>
         </div>
 
         {/* QR Code */}
@@ -451,6 +526,10 @@ const Booking = () => {
                 <span>Phone:</span> 
                 <span className="text-fuchsia-300">{registrationData?.phone}</span>
               </p>
+              <p className="text-white flex justify-between">
+                <span>Aadhaar:</span> 
+                <span className="text-fuchsia-300">XXXX-XXXX-{registrationData?.aadhaarNumber?.substring(8, 12)}</span>
+              </p>
             </div>
           </div>
           
@@ -460,17 +539,7 @@ const Booking = () => {
         </div>
       </div>
 
-      {/* Download/Print Options */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-        <button 
-          onClick={downloadTicket}
-          className="flex-1 py-3 px-4 bg-fuchsia-700 hover:bg-fuchsia-800 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Download Ticket
-        </button>
+
         
         <button 
           onClick={printTicket}
@@ -479,10 +548,9 @@ const Booking = () => {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
           </svg>
-          Print Ticket
+          Download Ticket
         </button>
       </div>
-    </div>
   );
 
   return (
@@ -522,7 +590,7 @@ const Booking = () => {
                 }}>
               SANSKRUTHI 2K25
             </h1>
-            <p className="text-fuchsia-300 mt-2">May 17, 2025 | Dr. Ambedkar Institute of Technology</p>
+            <p className="text-fuchsia-300 mt-2">June 4, 2025 | Dr. Ambedkar Institute of Technology</p>
           </div>
           
           {user && (
@@ -536,84 +604,29 @@ const Booking = () => {
                     style={{ boxShadow: '0 0 10px rgba(196, 23, 224, 0.5)' }}
                   />
                 )}
-                <div className="ml-2">
-                  <p className="text-white text-sm">{user.displayName}</p>
-                  <p className="text-fuchsia-300 text-xs">{user.email}</p>
-                </div>
+                             <div className="ml-2">
+                <p className="text-white text-sm">{user.displayName}</p>
+                <p className="text-fuchsia-300 text-xs">{user.email}</p>
               </div>
-              <button 
-                onClick={handleSignOut}
-                className="text-fuchsia-300 hover:text-white text-sm border border-fuchsia-500 rounded-full px-3 py-1 transition-all duration-300 hover:bg-fuchsia-900/30"
-                style={{ textShadow: '0 0 5px rgba(196, 23, 224, 0.5)' }}
-              >
-                Sign Out
-              </button>
             </div>
-          )}
-        </div>
-        
-        {/* Registration form or Success view */}
-        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-6 md:p-8 w-full border border-fuchsia-500/30"
-             style={{ boxShadow: '0 0 15px rgba(196, 23, 224, 0.3)' }}>
-          
-          {alreadyRegistered ? renderSuccessView() : renderRegistrationForm()}
-        </div>
-      </div>
-      
-      {/* Animated particles */}
-      <div className="particle-container fixed inset-0 z-30 pointer-events-none">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div 
-            key={i}
-            className="particle absolute rounded-full bg-fuchsia-500"
-            style={{
-              width: `${Math.random() * 5 + 1}px`,
-              height: `${Math.random() * 5 + 1}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.6 + 0.2,
-              animation: `float ${Math.random() * 10 + 10}s linear infinite`,
-              boxShadow: '0 0 5px #ff00ff'
-            }}
-          ></div>
-        ))}
+            <button 
+              onClick={handleSignOut}
+              className="text-fuchsia-300 hover:text-fuchsia-400 transition-colors text-sm flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Add print styles */}
-      <style jsx="true">{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          #printable-ticket, #printable-ticket * {
-            visibility: visible;
-          }
-          #printable-ticket {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            padding: 20px;
-          }
-        }
-        
-        @keyframes gridMove {
-          0% { background-position: 0 0; }
-          100% { background-position: 50px 50px; }
-        }
-        
-        @keyframes float {
-          0% { transform: translateY(0); opacity: 0; }
-          50% { opacity: 0.6; }
-          100% { transform: translateY(-100vh); opacity: 0; }
-        }
-        
-        @keyframes borderPulse {
-          0% { box-shadow: 0 0 5px #c417e0, 0 0 10px #c417e0; }
-          100% { box-shadow: 0 0 15px #c417e0, 0 0 20px #c417e0, 0 0 25px #c417e0; }
-        }
-      `}</style>
+      {/* Main content container */}
+      <div className="w-full bg-black/40 backdrop-blur-lg rounded-xl border border-fuchsia-500/30 p-6 md:p-8 shadow-xl shadow-fuchsia-900/20">
+        {alreadyRegistered ? renderSuccessView() : renderRegistrationForm()}
+      </div>
+    </div>
     </div>
   );
 };
