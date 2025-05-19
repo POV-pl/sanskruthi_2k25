@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import f1 from './assets/f1.jpg';
 import Footer from './footer.jsx'
+import { useNavigate } from 'react-router-dom';
 
 
 // Import components
@@ -15,6 +16,7 @@ import CheckInOut from './CheckInOut';
 const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
   const [tapCount, setTapCount] = useState(0);
   const tapTimer = useRef(null);
+  const navigate = useNavigate();
 
   const handleLogoTap = () => {
     setTapCount(prevCount => prevCount + 1);
@@ -26,10 +28,11 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
     
     // Set a new timer to reset tap count after 500ms
     tapTimer.current = setTimeout(() => {
+      
       // If double tap detected
       if (tapCount === 1) {
         // Navigate to CheckInOut page
-        window.location.href = "/CheckInOut";
+        navigate('/CheckInOut');
       }
       setTapCount(0);
     }, 500);
