@@ -1,1 +1,105 @@
 @import "tailwindcss";
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        transform: translateY(-100vh) scale(0.8);
+    }
+}
+
+@keyframes pulsate {
+    0% {
+        text-shadow: 0 0 4px #c417e0, 0 0 8px #c417e0, 0 0 18px #c417e0;
+    }
+
+    100% {
+        text-shadow: 0 0 7px #c417e0, 0 0 13px #c417e0, 0 0 25px #c417e0;
+    }
+}
+
+@keyframes flickerText {
+    0%, 18%, 22%, 25%, 53%, 57%, 100% {
+      text-shadow: 0 0 7px #ff00ff, 0 0 10px #ff00ff, 0 0 21px #ff00ff, 0 0 42px #c417e0, 0 0 82px #c417e0;
+    }
+    20%, 24%, 55% {
+      text-shadow: none;
+    }
+  }
+
+@keyframes flickerSmall {
+
+    0%,
+    50%,
+    100% {
+        text-shadow: 0 0 5px #17b2e0, 0 0 10px #17b2e0, 0 0 15px #17b2e0;
+    }
+
+    25%,
+    75% {
+        text-shadow: 0 0 3px #17b2e0, 0 0 6px #17b2e0, 0 0 9px #17b2e0;
+    }
+}
+
+@keyframes equalizer {
+    0% {
+        height: 10%;
+    }
+
+    100% {
+        height: 100%;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.3;
+    }
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+
+    50% {
+        transform: translateY(-30px) translateX(10px);
+    }
+
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+}
+
+@keyframes borderPulse {
+    0% {
+        box-shadow: 0 0 5px #c417e0, 0 0 10px #c417e0;
+    }
+
+    100% {
+        box-shadow: 0 0 7px #c417e0, 0 0 15px #c417e0, 0 0 20px #c417e0;
+    }
+}
+
+@keyframes gridMove {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 50px 50px;
+    }
+}

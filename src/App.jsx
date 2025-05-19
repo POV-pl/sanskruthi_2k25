@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import f1 from './assets/f1.jpg';
+import Footer from './footer.jsx'
+
 
 // Import components
 import Authentication from './Authentication';
@@ -47,7 +49,7 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
       
       <div className="flex items-center space-x-2 md:space-x-4">
         {/* Music Control Button */}
-        <button
+        {/* <button
           onClick={toggleMusic}
           className="text-white p-2 rounded-full hover:bg-fuchsia-900/30 transition-all duration-300"
           aria-label={isMusicPlaying ? "Pause music" : "Play music"}
@@ -62,7 +64,7 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
           )}
-        </button>
+        </button> */}
         
         {/* Fashion Show Button - Improved UI */}
         <Link 
@@ -200,7 +202,7 @@ const Home = () => {
   };
 
   return (
-    <div className="h-screen w-screen relative overflow-hidden flex justify-center items-center">
+    <div className="h-screen md:h-full w-screen relative overflow-hidden  ">
       {/* Navbar */}
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       
@@ -226,7 +228,7 @@ const Home = () => {
       ></div>
 
       {/* Content container - Added pt-20 to allow space for the navbar */}
-      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col items-center pt-20 ${
+      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col mb-8 items-center pt-20 ${
         isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       } transition-all duration-1000 ease-in-out`}>
         
@@ -326,6 +328,7 @@ const Home = () => {
           </div>
         </div>
       </div>
+      <Footer/>
 
       {/* Animated particles */}
       <div className="particle-container absolute inset-0 z-30">
@@ -344,8 +347,11 @@ const Home = () => {
             }}
           ></div>
         ))}
+        
       </div>
+      
     </div>
+    
   );
 };
 
@@ -429,8 +435,11 @@ const Layout = ({ children }) => {
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       <div className="pt-16">
         {children}
+        
       </div>
+      <Footer />
     </div>
+    
   );
 };
 
@@ -450,16 +459,16 @@ const FashionShow = () => {
 
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
           <div className="absolute bottom-0 left-0 right-0 p-6">
-            <h2 className="font-['Orbitron'] text-3xl md:text-4xl font-bold text-white mb-2"
+            <h2 className="font-['Orbitron'] text-center text-3xl md:text-4xl font-bold text-white mb-2"
                 style={{ textShadow: '0 0 10px #c417e0, 0 0 20px #c417e0' }}>
               SANSKRUTHI FASHION SHOW
             </h2>
-            <p className="text-white/90 text-lg">Showcase your style on the biggest stage!</p>
+            <p className="text-white/90 text-lg text-center">Showcase your style on the biggest stage!</p>
           </div>
         </div>
         
         {/* Registration Info */}
-        <div className="bg-black/50 backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6 mb-8">
+        <div className="bg-black/50 text-center backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6 mb-8">
           <h3 className="font-['Orbitron'] text-2xl text-white mb-4"
               style={{ textShadow: '0 0 5px #c417e0' }}>
             REGISTRATION
@@ -478,14 +487,14 @@ const FashionShow = () => {
         </div>
         
         {/* Event Details */}
-        <div className="bg-black/50 backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6">
+        <div className="bg-black/50 text-center backdrop-blur-sm border border-fuchsia-500/30 rounded-lg p-6">
           <h3 className="font-['Orbitron'] text-2xl text-white mb-4"
               style={{ textShadow: '0 0 5px #c417e0' }}>
             EVENT DETAILS
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="">
             <div>
-              <h4 className="text-fuchsia-300 text-lg mb-2">Date & Time</h4>
+              <h4 className="text-fuchsia-300 text-center text-lg mb-2">Date & Time</h4>
               <p className="text-white">May 25, 2025 | 6:00 PM</p>
             </div>
             
@@ -498,70 +507,16 @@ const FashionShow = () => {
 };
 
 function App() {
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes pulsate {
-        0% { text-shadow: 0 0 4px #c417e0, 0 0 8px #c417e0, 0 0 18px #c417e0; }
-        100% { text-shadow: 0 0 7px #c417e0, 0 0 13px #c417e0, 0 0 25px #c417e0; }
-      }
-      
-      @keyframes flickerText {
-        0%, 18%, 22%, 25%, 53%, 57%, 100% {
-          text-shadow: 0 0 7px #ff00ff, 0 0 10px #ff00ff, 0 0 21px #ff00ff, 0 0 42px #c417e0, 0 0 82px #c417e0;
-        }
-        20%, 24%, 55% {
-          text-shadow: none;
-        }
-      }
-      
-      @keyframes flickerSmall {
-        0%, 50%, 100% {
-          text-shadow: 0 0 5px #17b2e0, 0 0 10px #17b2e0, 0 0 15px #17b2e0;
-        }
-        25%, 75% {
-          text-shadow: 0 0 3px #17b2e0, 0 0 6px #17b2e0, 0 0 9px #17b2e0;
-        }
-      }
-      
-      @keyframes equalizer {
-        0% { height: 10%; }
-        100% { height: 100%; }
-      }
-      
-      @keyframes pulse {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
-        50% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-        100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; }
-      }
-      
-      @keyframes float {
-        0% { transform: translateY(0) translateX(0); }
-        50% { transform: translateY(-20px) translateX(10px); }
-        100% { transform: translateY(0) translateX(0); }
-      }
-      
-      @keyframes borderPulse {
-        0% { box-shadow: 0 0 5px #c417e0, 0 0 10px #c417e0; }
-        100% { box-shadow: 0 0 7px #c417e0, 0 0 15px #c417e0, 0 0 20px #c417e0; }
-      }
-      
-      @keyframes gridMove {
-        0% { background-position: 0 0; }
-        100% { background-position: 50px 50px; }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+
+  
+
 
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />
+      
+      } />
         <Route path="/auth" element={
           <Layout>
             <Authentication />
@@ -584,9 +539,13 @@ function App() {
             </Layout>
           </SecureRoute>
         } />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {/* <Footer/> */}
     </Router>
+    
+
   );
 }
 

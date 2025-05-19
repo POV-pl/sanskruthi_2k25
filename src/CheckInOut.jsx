@@ -453,7 +453,7 @@ const CheckInOut = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-purple-900 text-white p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black to-purple-900 text-white p-4 pt-20">
       {/* Header with title */}
       <div className="w-full text-center mb-6">
         <h1 className="font-['Orbitron'] text-3xl sm:text-4xl font-bold tracking-wider"
@@ -467,7 +467,7 @@ const CheckInOut = () => {
 
       {/* Auth check - if not authenticated, show login screen */}
       {!isAuthenticated ? (
-        <div className="max-w-md mx-auto bg-black/40 backdrop-blur-sm rounded-xl border border-fuchsia-500/30 overflow-hidden p-6"
+        <div className="max-w-md mx-auto bg-black/40 backdrop-blur-sm rounded-xl border border-fuchsia-500/30 overflow-hidden p-6 mt-3"
           style={{ boxShadow: '0 0 15px rgba(196, 23, 224, 0.3)' }}>
           <h2 className="text-xl font-semibold mb-6 text-center">Admin Authentication Required</h2>
 

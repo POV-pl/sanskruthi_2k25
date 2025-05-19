@@ -44,7 +44,7 @@ const Authentication = () => {
   };
 
   return (
-    <div className="h-screen w-screen relative overflow-hidden flex justify-center items-center">
+    <div className="h-screen  relative overflow-hidden flex justify-center items-center">
       {/* Animated background with the boombox GIF */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
