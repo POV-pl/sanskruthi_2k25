@@ -210,19 +210,19 @@ const Home = () => {
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       
       {/* Animated background with the boombox GIF */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center">
+      <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-0 z-20"></div>
         <img 
           src="/200w.gif" 
           alt="DJ Boombox" 
-          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full  z-20 md:z-30  opacity-85 "
+          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full  z-20 md:z-30  opacity-95 "
           style={{ filter: 'hue-rotate(280deg) brightness(0.6) ' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20 "></div>
       </div>
       
       {/* Animated grid overlay */}
-      <div className="absolute inset-0 z-20 opacity-25" 
+      <div className="absolute inset-0 z-30 opacity-35" 
         style={{
           backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent)',
           backgroundSize: '50px 50px',
@@ -292,7 +292,7 @@ const Home = () => {
           ))}
         </div>
 
-        <div className=" font-['Orbitron'] text-sm md:text-lg text-center text-white">Organized by Student Welfare Organisation</div>
+        <div className=" font-['Orbitron'] text-sm md:text-lg text-center text-white">Organized by Student Welfare Office</div>
         
         {/* CTA button with hover effects */}
         <div className="mt-4 md:mt-6 flex flex-col items-center">
@@ -331,7 +331,7 @@ const Home = () => {
 
       {/* Animated particles */}
       <div className="particle-container absolute inset-0 z-30">
-        {[...Array(150)].map((_, i) => (
+        {[...Array(70)].map((_, i) => (
           <div 
             key={i}
             className="particle absolute rounded-full bg-fuchsia-500"
