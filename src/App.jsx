@@ -476,14 +476,35 @@ const FashionShow = () => {
           <p className="text-white/90 mb-6">
             Join us for an unforgettable night of fashion and creativity. Show off your unique style and compete for amazing prizes!
           </p>
-          <a 
-            href="https://forms.gle/LRxVzDZrMDFMCszy9" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="font-['Orbitron'] inline-block py-3 px-6 bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
-          >
-            REGISTER NOW
-          </a>
+          
+          {/* Registration and Rules Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a 
+              href="https://forms.gle/LRxVzDZrMDFMCszy9" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-['Orbitron'] inline-block py-3 px-6 bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
+            >
+              REGISTER NOW
+            </a>
+            
+            <a 
+              href="https://drive.google.com/file/d/1OhKOMv6Z8QDjGs9zWklEB4ZHWRaM2ifW/view?usp=sharing" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-['Orbitron'] inline-flex items-center gap-2 py-3 px-6 bg-transparent text-white border-2 border-fuchsia-500 rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500/20"
+              style={{ boxShadow: '0 0 5px #c417e0' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14,2 14,8 20,8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10,9 9,9 8,9"></polyline>
+              </svg>
+              VIEW RULES
+            </a>
+          </div>
         </div>
         
         {/* Event Details */}
@@ -495,7 +516,7 @@ const FashionShow = () => {
           <div className="">
             <div>
               <h4 className="text-fuchsia-300 text-center text-lg mb-2">Date & Time</h4>
-              <p className="text-white">May 25, 2025 | 6:00 PM</p>
+              <p className="text-white">June 5, 2025</p>
             </div>
             
       
@@ -523,7 +544,6 @@ const FashionShow = () => {
     </div>
   );
 };
-
 function App() {
 
   
