@@ -86,7 +86,7 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
             <path d="M12 16v4"></path>
             <path d="M8 12a4 4 0 0 1 8 0"></path>
           </svg>
-          FASHION SHOW
+          FASHION WALK
         </Link>
         
         {/* Conditional Book Ticket or Login Button */}
@@ -205,24 +205,24 @@ const Home = () => {
   };
 
   return (
-    <div className="h-screen md:h-full w-screen relative overflow-hidden  ">
+    <div className="h-full w-full relative overflow-hidden  ">
       {/* Navbar */}
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       
       {/* Animated background with the boombox GIF */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
+      <div className="absolute inset-0 z-10 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black opacity-0 z-20"></div>
         <img 
           src="/200w.gif" 
           alt="DJ Boombox" 
-          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full object-cover z-0 opacity-80"
-          style={{ filter: 'hue-rotate(280deg) brightness(0.7)' }}
+          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full  z-20 md:z-30  opacity-85 "
+          style={{ filter: 'hue-rotate(280deg) brightness(0.6) ' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20 "></div>
       </div>
       
       {/* Animated grid overlay */}
-      <div className="absolute inset-0 z-30 opacity-25" 
+      <div className="absolute inset-0 z-20 opacity-25" 
         style={{
           backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 0, 255, 0.3) 25%, rgba(255, 0, 255, 0.3) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.3) 75%, rgba(255, 0, 255, 0.3) 76%, transparent 77%, transparent)',
           backgroundSize: '50px 50px',
@@ -231,12 +231,12 @@ const Home = () => {
       ></div>
 
       {/* Content container - Added pt-20 to allow space for the navbar */}
-      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col mb-8 items-center pt-20 ${
+      <div className={`relative z-40 w-[90%] max-w-5xl mx-auto flex flex-col mb-15 items-center pt-10 ${
         isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
       } transition-all duration-1000 ease-in-out`}>
         
         {/* College info with neon effect */}
-        <div className="text-center mb-15 md:mb-8">
+        <div className="text-center mb-25 md:mb-8">
           <h2 className="font-['Orbitron'] text-lg md:text-2xl lg:text-3xl font-bold text-white tracking-wider px-4 py-2"
               style={{
                 textShadow: '0 0 5px #c417e0, 0 0 10px #c417e0, 0 0 20px #c417e0',
@@ -255,7 +255,7 @@ const Home = () => {
         {/* Event title with intense neon effect - Reduced vertical margins */}
         <div className="my-6 md:my-10 relative">
           {/* Animated glow circle behind title */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[140%] rounded-full bg-purple-900/20 blur-xl"
+          <div className="absolute  top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[140%] rounded-full bg-purple-900/20 blur-xl"
                style={{ animation: 'pulse 3s infinite' }}></div>
                
           <h1 className="font-['Orbitron'] text-4xl sm:text-6xl md:text-7xl font-black tracking-wider text-white mb-4"
@@ -273,6 +273,7 @@ const Home = () => {
                }}>
             2K25
           </div>
+          
         </div>
         
         {/* DJ deck animated equalizer - Reduced height */}
@@ -290,6 +291,8 @@ const Home = () => {
             ></div>
           ))}
         </div>
+
+        <div className=" font-['Orbitron'] text-sm md:text-lg text-center text-white">Organized by Student Welfare Organisation</div>
         
         {/* CTA button with hover effects */}
         <div className="mt-4 md:mt-6 flex flex-col items-center">
@@ -319,23 +322,16 @@ const Home = () => {
           </p>
           
           {/* Social media with animated icons */}
-          <div className="flex items-center gap-6 mt-6">
-            <a href="#" className="text-white hover:text-fuchsia-400 transition-all duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-            </a>
-            <span className="text-base tracking-wider text-white/90 font-['Orbitron']">@sanskruthi_drait</span>
-          </div>
+          <div className='mb-0 md:mb-0'></div>
+          
         </div>
       </div>
-      <Footer/>
+
+      
 
       {/* Animated particles */}
       <div className="particle-container absolute inset-0 z-30">
-        {[...Array(40)].map((_, i) => (
+        {[...Array(150)].map((_, i) => (
           <div 
             key={i}
             className="particle absolute rounded-full bg-fuchsia-500"
@@ -434,7 +430,7 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="w-full min-h-screen bg-black text-white">
       <Navbar user={user} toggleMusic={toggleMusic} isMusicPlaying={isMusicPlaying} />
       <div className="pt-16">
         {children}
@@ -450,6 +446,7 @@ const Layout = ({ children }) => {
 const FashionShow = () => {
   return (
     <div className="container mx-auto px-4 py-10">
+       
       <div className="max-w-4xl mx-auto">
         {/* Fashion Show Poster */}
         <div className="relative rounded-lg overflow-hidden border-2 border-fuchsia-500 mb-8"
@@ -464,7 +461,7 @@ const FashionShow = () => {
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <h2 className="font-['Orbitron'] text-center text-3xl md:text-4xl font-bold text-white mb-2"
                 style={{ textShadow: '0 0 10px #c417e0, 0 0 20px #c417e0' }}>
-              SANSKRUTHI FASHION SHOW
+              SANSKRUTHI FASHION WALK
             </h2>
             <p className="text-white/90 text-lg text-center">Showcase your style on the biggest stage!</p>
           </div>
@@ -480,7 +477,7 @@ const FashionShow = () => {
             Join us for an unforgettable night of fashion and creativity. Show off your unique style and compete for amazing prizes!
           </p>
           <a 
-            href="https://forms.google.com/your-gform-link" 
+            href="https://forms.gle/LRxVzDZrMDFMCszy9" 
             target="_blank" 
             rel="noopener noreferrer"
             className="font-['Orbitron'] inline-block py-3 px-6 bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
@@ -505,6 +502,24 @@ const FashionShow = () => {
           </div>
         </div>
       </div>
+      <div className="particle-container w-full overflow-hidden absolute inset-0 z-30">
+        {[...Array(200)].map((_, i) => (
+          <div 
+            key={i}
+            className="particle absolute rounded-full bg-fuchsia-500"
+            style={{
+              width: `${Math.random() * 5 + 1}px`,
+              height: `${Math.random() * 5 + 1}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.6 + 0.2,
+              animation: `float ${Math.random() * 10 + 10}s linear infinite`,
+              boxShadow: '0 0 5px #ff00ff'
+            }}
+          ></div>
+        ))}
+        
+      </div>
     </div>
   );
 };
@@ -517,7 +532,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />
+        <Route path="/" element={
+         
+  
+          <Layout>
+             <Home />
+          </Layout>
+        
+          
       
       } />
         <Route path="/auth" element={

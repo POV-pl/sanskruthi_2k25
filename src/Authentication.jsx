@@ -93,6 +93,8 @@ const Authentication = () => {
             2K25
           </div>
         </div>
+
+        
         
         {/* Authentication section */}
         <div className="bg-black/40 backdrop-blur-sm rounded-xl p-8 w-full max-w-md border border-fuchsia-500/30"
@@ -133,7 +135,7 @@ const Authentication = () => {
         
         {/* Animated particles */}
         <div className="particle-container absolute inset-0 z-30 pointer-events-none">
-          {[...Array(40)].map((_, i) => (
+          {[...Array(150)].map((_, i) => (
             <div 
               key={i}
               className="particle absolute rounded-full bg-fuchsia-500"

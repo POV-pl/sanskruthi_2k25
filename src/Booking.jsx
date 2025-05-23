@@ -561,8 +561,8 @@ const Booking = () => {
         <img 
           src="/200w.gif" 
           alt="DJ Boombox" 
-          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full object-cover z-0 opacity-100"
-          style={{ filter: 'hue-rotate(280deg) brightness(0.7)' }}
+          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full  z-0 opacity-100"
+          style={{ filter: 'hue-rotate(280deg) brightness(0.5)' }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20"></div>
       </div>
@@ -575,6 +575,25 @@ const Booking = () => {
           animation: 'gridMove 20s linear infinite'
         }}
       ></div>
+
+      <div className="particle-container absolute inset-0 z-30">
+        {[...Array(250)].map((_, i) => (
+          <div 
+            key={i}
+            className="particle absolute rounded-full bg-fuchsia-500"
+            style={{
+              width: `${Math.random() * 5 + 1}px`,
+              height: `${Math.random() * 5 + 1}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.6 + 0.2,
+              animation: `float ${Math.random() * 10 + 10}s linear infinite`,
+              boxShadow: '0 0 5px #ff00ff'
+            }}
+          ></div>
+        ))}
+        
+      </div>
 
       {/* Content container */}
       <div className={`relative z-40 w-[90%] max-w-5xl mx-auto py-8 md:py-16 flex flex-col items-center ${
