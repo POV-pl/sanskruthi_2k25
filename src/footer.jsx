@@ -19,7 +19,7 @@ const Footer = () => {
           
           {/* Quick links - center on mobile, right on desktop */}
           <div className="flex flex-wrap font-['Orbitron'] font-bold justify-center md:justify-end gap-x-6 gap-y-2">
-           <div className="text-white/80 ">Checkout</div>
+           <div className="text-white/80 ">Developed by</div>
            <a href="https://www.linkedin.com/in/goutham-k-p-10780a323/" 
                target="_blank" 
                rel="noopener noreferrer"
