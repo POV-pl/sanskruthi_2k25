@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.1.4",
     "firebase": "^11.6.1",
     "framer-motion": "^12.6.5",
+    "git": "^0.1.5",
     "html2canvas": "^1.4.1",
     "jsqr": "^1.4.0",
     "qrcode.react": "^4.2.0",

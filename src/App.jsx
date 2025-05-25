@@ -94,7 +94,7 @@ const Navbar = ({ user, toggleMusic, isMusicPlaying }) => {
           to={user ? "/booking" : "/auth"}
           className="font-['Orbitron'] py-1.5 px-3 text-xs md:text-sm bg-fuchsia-600/80 text-white rounded-md font-medium transition-all duration-300 hover:bg-fuchsia-500"
         >
-          {user ? "BOOK TICKET" : "LOGIN"}
+          {user ? "Login Here" : "LOGIN"}
         </Link>
       </div>
     </nav>
@@ -314,11 +314,11 @@ const Home = () => {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            GET YOUR TICKET
+            Register Now
           </Link>
           
           <p className="text-fuchsia-300 text-sm mt-4 font-light" style={{ textShadow: '0 0 5px #c417e0' }}>
-            Limited tickets available - Book yours now!
+            Register now to secure your spot!
           </p>
           
           {/* Social media with animated icons */}
