@@ -516,7 +516,7 @@ const FashionShow = () => {
           <div className="">
             <div>
               <h4 className="text-fuchsia-300 text-center text-lg mb-2">Date & Time</h4>
-              <p className="text-white">June 5, 2025</p>
+              <p className="text-white">June 4, 2025, 3 PM</p>
             </div>
             
       
