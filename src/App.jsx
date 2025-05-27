@@ -314,11 +314,11 @@ const Home = () => {
               e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            Register Now
+            Free Register Now
           </Link>
           
           <p className="text-fuchsia-300 text-sm mt-4 font-light" style={{ textShadow: '0 0 5px #c417e0' }}>
-            Register now to secure your spot!
+            Free Register now to secure your spot!
           </p>
           
           {/* Social media with animated icons */}
