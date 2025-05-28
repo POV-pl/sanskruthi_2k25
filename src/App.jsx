@@ -215,8 +215,8 @@ const Home = () => {
         <img 
           src="/200w.gif" 
           alt="DJ Boombox" 
-          className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full  z-20 md:z-30  opacity-95 "
-          style={{ filter: 'hue-rotate(280deg) brightness(0.6) ' }}
+            className="absolute inset-0 min-w-screen min-h-dvh sm:w-full sm:h-full z-20 md:z-30 opacity-95 hue-rotate-[280deg] brightness-0 md:brightness-50"
+          
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-20 "></div>
       </div>
@@ -331,7 +331,7 @@ const Home = () => {
 
       {/* Animated particles */}
       <div className="particle-container absolute inset-0 z-30">
-        {[...Array(70)].map((_, i) => (
+        {[...Array(200)].map((_, i) => (
           <div 
             key={i}
             className="particle absolute rounded-full bg-fuchsia-500"
