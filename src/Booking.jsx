@@ -15,7 +15,6 @@ const Booking = () => {
   const [registrationData, setRegistrationData] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [verifiedDetails, setVerifiedDetails] = useState(false);
-  const [aadhaarError, setAadhaarError] = useState('');
   const fileInputRef = useRef(null);
   const ticketRef = useRef(null);
   
@@ -25,7 +24,6 @@ const Booking = () => {
     phone: '',
     usn: '',
     collegeName: '',
-    aadhaarNumber: '',
     referralSource: '',
     imageUrl: ''
   });
@@ -89,30 +87,10 @@ const Booking = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle Aadhaar number validation
-    if (name === 'aadhaarNumber') {
-      // Only allow digits
-      const digitsOnly = value.replace(/\D/g, '');
-      
-      // Limit to 12 digits
-      const truncated = digitsOnly.slice(0, 12);
-      
-      if (truncated.length > 0 && truncated.length < 12) {
-        setAadhaarError('Aadhaar number must be 12 digits');
-      } else {
-        setAadhaarError('');
-      }
-      
-      setFormData(prev => ({
-        ...prev,
-        [name]: truncated
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleVerificationChange = (e) => {
@@ -165,12 +143,6 @@ const Booking = () => {
 
     if (!verifiedDetails) {
       alert("Please verify your details by checking the confirmation box");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.aadhaarNumber.length !== 12) {
-      setAadhaarError('Aadhaar number must be 12 digits');
       setIsSubmitting(false);
       return;
     }
@@ -304,32 +276,16 @@ const Booking = () => {
           />
         </div>
 
-        {/* Aadhaar Number */}
-        <div>
-          <label htmlFor="aadhaarNumber" className="block text-fuchsia-200 mb-1">Aadhaar Number</label>
-          <input
-            type="text"
-            id="aadhaarNumber"
-            name="aadhaarNumber"
-            value={formData.aadhaarNumber}
-            onChange={handleInputChange}
-            required
-            placeholder="12 digit Aadhaar number"
-            className={`w-full bg-black/30 border ${aadhaarError ? 'border-red-500' : 'border-fuchsia-500/50'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500`}
-          />
-          {aadhaarError && <p className="text-red-400 text-xs mt-1">{aadhaarError}</p>}
-          <p className="text-fuchsia-300 text-xs mt-1">Must be a valid 12-digit Aadhaar number</p>
-        </div>
-
         {/* USN */}
         <div>
-          <label htmlFor="usn" className="block text-fuchsia-200 mb-1">USN (if applicable)</label>
+          <label htmlFor="usn" className="block text-fuchsia-200 mb-1">USN</label>
           <input
             type="text"
             id="usn"
             name="usn"
             value={formData.usn}
             onChange={handleInputChange}
+            required
             className="w-full bg-black/30 border border-fuchsia-500/50 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
           />
         </div>
@@ -513,7 +469,7 @@ const Booking = () => {
               <div className="ml-4">
                 <p className="text-white font-semibold">{registrationData?.fullName}</p>
                 <p className="text-fuchsia-300 text-sm">{registrationData?.collegeName}</p>
-                {registrationData?.usn && <p className="text-fuchsia-300 text-sm">USN: {registrationData.usn}</p>}
+                <p className="text-fuchsia-300 text-sm">USN: {registrationData?.usn}</p>
               </div>
             </div>
             
@@ -525,10 +481,6 @@ const Booking = () => {
               <p className="text-white flex justify-between">
                 <span>Phone:</span> 
                 <span className="text-fuchsia-300">{registrationData?.phone}</span>
-              </p>
-              <p className="text-white flex justify-between">
-                <span>Aadhaar:</span> 
-                <span className="text-fuchsia-300">XXXX-XXXX-{registrationData?.aadhaarNumber?.substring(8, 12)}</span>
               </p>
             </div>
           </div>
