@@ -6,6 +6,7 @@ import Footer from './footer.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+
     {/* <Footer /> */}
   </StrictMode>,
 )
