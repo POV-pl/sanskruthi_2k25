@@ -343,7 +343,7 @@ const CheckInOut = () => {
 
   // Handle check-in process
   const handleCheckIn = async () => {
-    if (!attendee || !attendee.userId) return;
+    if (!attendee || !attendee.userId || attendee.checkInId) return;
   
     setLoading(true);
     try {
@@ -352,7 +352,16 @@ const CheckInOut = () => {
         userId: attendee.userId,
         fullName: attendee.fullName,
         checkInTime: new Date()
-      });
+      },
+    );
+
+    await addDoc(collection(db, "checkedInReference"), {
+        userId: attendee.userId,
+        fullName: attendee.fullName,
+        checkInTime: new Date()
+      },
+    );
+
   
       setMessage({
         text: `Successfully checked in ${attendee.fullName}!`,
@@ -382,11 +391,18 @@ const CheckInOut = () => {
 
   // Handle check-out process
   const handleCheckOut = async () => {
-    if (!attendee || !attendee.checkInId) return;
+    if (!attendee || !attendee.checkInId || attendee.checkOutId) return;
   
     setLoading(true);
     try {
       // Delete from checkedIn collection
+       await addDoc(collection(db, "checkedOut"), {
+        userId: attendee.userId,
+        fullName: attendee.fullName,
+        checkOutTime: new Date()
+      });
+
+
       await deleteDoc(doc(db, "checkedIn", attendee.checkInId));
   
       setMessage({
