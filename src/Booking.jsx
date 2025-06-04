@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from './firebase'; // Make sure path is correct
-// Booking.jsx
 
-// ... rest of your code
 const Booking = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState(null);
@@ -97,39 +95,76 @@ const Booking = () => {
     setVerifiedDetails(e.target.checked);
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+ const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    setImageUploading(true);
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert("Please select a valid image file (JPG or PNG)");
+    return;
+  }
+
+  // Validate file size (max 10MB)
+  if (file.size > 10 * 1024 * 1024) {
+    alert("Image size should be less than 10MB");
+    return;
+  }
+
+  setImageUploading(true);
+  
+  const formDataObj = new FormData();
+  formDataObj.append('file', file);
+  formDataObj.append('upload_preset', 'sanskruthi2k25');
+  
+  // Remove API key parameter (not needed for unsigned uploads)
+
+  try {
+    console.log('Starting image upload...');
     
-    const formDataObj = new FormData();
-    formDataObj.append('file', file);
-    formDataObj.append('upload_preset', 'sanskruthi2k25'); // This should be created in Cloudinary
+    const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dbasmuwa7/upload';
+    const response = await fetch(cloudinaryUrl, {
+      method: 'POST',
+      body: formDataObj,
+      // Cloudinary supports CORS, no need for custom headers
+    });
 
-    try {
-      // Directly using the cloudinary URL with the cloud name from your info
-      const cloudinaryUrl = 'https://api.cloudinary.com/v1_1/dafxkkbxi/image/upload';
-      const response = await fetch(cloudinaryUrl, {
-        method: 'POST',
-        body: formDataObj
-      });
-
-      const data = await response.json();
-      
-      if (data.secure_url) {
-        setFormData(prev => ({
-          ...prev,
-          imageUrl: data.secure_url
-        }));
-      }
-    } catch (error) {
-      console.error("Image upload error:", error);
-      alert("Failed to upload image. Please try again.");
-    } finally {
-      setImageUploading(false);
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      // Try to get detailed error from Cloudinary
+      let errorMsg = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.error.message || errorMsg;
+      } catch {}
+      throw new Error(errorMsg);
     }
-  };
+
+    const data = await response.json();
+    console.log('Cloudinary response:', data);
+    
+    if (data.secure_url) {
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: data.secure_url
+      }));
+      alert("Image uploaded successfully!");
+    } else {
+      throw new Error('Invalid response from Cloudinary');
+    }
+  } catch (error) {
+    console.error("Image upload error:", error);
+    alert(`Failed to upload image: ${error.message}. Please try again.`);
+    
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  } finally {
+    setImageUploading(false);
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -346,24 +381,29 @@ const Booking = () => {
                 <button
                   type="button"
                   onClick={triggerFileInput}
-                  className="absolute bottom-2 right-2 bg-fuchsia-700 text-white p-1 rounded-full"
+                  disabled={imageUploading}
+                  className="absolute bottom-2 right-2 bg-fuchsia-700 text-white p-1 rounded-full hover:bg-fuchsia-600 disabled:opacity-50"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                   </svg>
                 </button>
+                <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                  ✓ Uploaded
+                </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={triggerFileInput}
-                className="h-40 w-40 border-2 border-dashed border-fuchsia-500 rounded-lg flex flex-col items-center justify-center text-fuchsia-300 hover:bg-fuchsia-900/20 transition-all"
+                className="h-40 w-40 border-2 border-dashed border-fuchsia-500 rounded-lg flex flex-col items-center justify-center text-fuchsia-300 hover:bg-fuchsia-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={imageUploading}
               >
                 {imageUploading ? (
                   <div className="flex flex-col items-center">
                     <div className="animate-spin h-8 w-8 border-2 border-fuchsia-500 border-t-transparent rounded-full mb-2"></div>
-                    <span>Uploading...</span>
+                    <span className="text-sm">Uploading...</span>
+                    <span className="text-xs text-fuchsia-400 mt-1">Please wait</span>
                   </div>
                 ) : (
                   <>
@@ -371,11 +411,33 @@ const Booking = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>Upload Clear Photo</span>
+                    <span className="text-xs text-fuchsia-400 mt-1">Click to select</span>
                   </>
                 )}
               </button>
             )}
           </div>
+          
+          {/* Upload Progress/Status */}
+          {imageUploading && (
+            <div className="mt-2 text-center">
+              <div className="text-fuchsia-300 text-sm">Uploading to cloud storage...</div>
+              <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+                <div className="bg-fuchsia-500 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+              </div>
+            </div>
+          )}
+          
+          {formData.imageUrl && !imageUploading && (
+            <div className="mt-2 text-center">
+              <div className="text-green-400 text-sm flex items-center justify-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Image uploaded successfully!
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Event Info */}
@@ -491,22 +553,57 @@ const Booking = () => {
         </div>
       </div>
 
-
-        
-        <button 
-          onClick={printTicket}
-          className="flex-1 py-3 px-4 bg-fuchsia-900 hover:bg-fuchsia-950 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          Download Ticket
-        </button>
-      </div>
+      <button 
+        onClick={downloadTicket}
+        className="flex-1 py-3 px-4 bg-fuchsia-900 hover:bg-fuchsia-950 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Download Ticket
+      </button>
+    </div>
   );
 
   return (
     <div className="min-h-screen w-screen relative overflow-x-hidden flex justify-center">
+      {/* Custom CSS Styles */}
+      <style jsx>{`
+        @keyframes borderPulse {
+          0% { box-shadow: 0 0 5px #c417e0, 0 0 10px #c417e0; }
+          100% { box-shadow: 0 0 10px #c417e0, 0 0 20px #c417e0, 0 0 30px #c417e0; }
+        }
+        
+        @keyframes gridMove {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(50px, 50px); }
+        }
+        
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+          100% { transform: translateY(0px); }
+        }
+        
+        .particle {
+          filter: blur(1px);
+        }
+        
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-ticket, #printable-ticket * {
+            visibility: visible;
+          }
+          #printable-ticket {
+            position: absolute;
+            left: 0;
+            top: 0;
+          }
+        }
+      `}</style>
+
       {/* Animated background with the boombox GIF */}
       <div className="fixed inset-0 z-0 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40 z-10"></div>
@@ -544,7 +641,6 @@ const Booking = () => {
             }}
           ></div>
         ))}
-        
       </div>
 
       {/* Content container */}
@@ -555,49 +651,35 @@ const Booking = () => {
         {/* Header with user info */}
         <div className="w-full flex flex-col md:flex-row justify-between items-center mb-8">
           <div>
-            <h1 className="font-['Orbitron'] text-3xl sm:text-4xl md:text-5xl font-bold tracking-wider text-white"
+                        <h1 className="font-['Orbitron'] text-3xl sm:text-4xl md:text-5xl font-bold tracking-wider text-white"
                 style={{
                   textShadow: '0 0 7px #ff00ff, 0 0 10px #ff00ff, 0 0 21px #ff00ff',
                 }}>
               SANSKRUTHI 2K25
             </h1>
-            <p className="text-fuchsia-300 mt-2">June 4, 2025 | Dr. Ambedkar Institute of Technology</p>
           </div>
-          
-          {user && (
-            <div className="mt-4 md:mt-0 flex items-center gap-4">
-              <div className="flex items-center">
-                {user.photoURL && (
-                  <img 
-                    src={user.photoURL} 
-                    alt="Profile" 
-                    className="w-10 h-10 rounded-full border-2 border-fuchsia-500"
-                    style={{ boxShadow: '0 0 10px rgba(196, 23, 224, 0.5)' }}
-                  />
-                )}
-                             <div className="ml-2">
-                <p className="text-white text-sm">{user.displayName}</p>
-                <p className="text-fuchsia-300 text-xs">{user.email}</p>
-              </div>
-            </div>
-            <button 
-              onClick={handleSignOut}
-              className="text-fuchsia-300 hover:text-fuchsia-400 transition-colors text-sm flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Sign Out
-            </button>
+          <div className="mt-4 md:mt-0 flex items-center">
+            {user && (
+              <>
+                <div className="text-white mr-4 text-sm md:text-base">
+                  <span className="text-fuchsia-300">Welcome,</span> {user.displayName || user.email.split('@')[0]}
+                </div>
+                <button 
+                  onClick={handleSignOut}
+                  className="py-2 px-4 bg-fuchsia-900 hover:bg-fuchsia-800 text-white rounded-lg font-medium transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
+        
+        {/* Main Content */}
+        <div className="w-full max-w-2xl bg-black/30 backdrop-blur-lg rounded-2xl border border-fuchsia-500/30 p-6 md:p-8 shadow-2xl shadow-fuchsia-900/30">
+          {alreadyRegistered ? renderSuccessView() : renderRegistrationForm()}
+        </div>
       </div>
-
-      {/* Main content container */}
-      <div className="w-full bg-black/40 backdrop-blur-lg rounded-xl border border-fuchsia-500/30 p-6 md:p-8 shadow-xl shadow-fuchsia-900/20">
-        {alreadyRegistered ? renderSuccessView() : renderRegistrationForm()}
-      </div>
-    </div>
     </div>
   );
 };
